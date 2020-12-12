@@ -20,7 +20,6 @@ class Chess:
         pass
 
 
-
     """
     Vlastnosti figurek    
     """
