@@ -19,7 +19,6 @@ class Chess:
         #check if move is legit
         pass
 
-
     """
     Vlastnosti figurek    
     """
