@@ -18,7 +18,8 @@ class Chess:
     def Legit(self):
         #check if move is legit
         pass
-
+    def test(self):
+        pass
     """
     Vlastnosti figurek    
     """
