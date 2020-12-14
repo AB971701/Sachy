@@ -91,6 +91,8 @@ class Chess:
             self.board[end_row][end_col] = tmp
 
             self.white_plays = not self.white_plays
+            return True
+        return False
 
     def __is_valid(self, start_position, end_position):
         """
@@ -99,7 +101,9 @@ class Chess:
         :param end_position: position to which is the piece moved
         :return: True if move is valid else False
         """
+        # kontroluje spravnost souradnic
         if self.__coord_valid(start_position) and self.__coord_valid(end_position):
+            # kontroluje
             if self.__own_piece_on_coords(start_position[0], ord(start_position[1]) - ord('0')):
                 if not self.__own_piece_on_coords(end_position[0], ord(end_position[1]) - ord('0')):
                     if self.__move_legal(start_position, end_position):
@@ -133,6 +137,13 @@ class Chess:
         """
         piece = self.__find_piece_on_coords(file, rank)
         if piece is not None and ((piece.isupper()) if self.white_plays else piece.islower()):
+            return True
+        return False
+
+    def __is_own_piece(self, piece):
+        if piece.isupper() and self.white_plays:
+            return True
+        if piece.islower() and not self.white_plays:
             return True
         return False
 
@@ -170,11 +181,13 @@ class Chess:
     def get_pawn_moves(self, file, rank):
         file_num = self.LETTER_TO_INDEX[file]
         possible_moves = []
-
+        # bily je na tahu
         if self.white_plays:
             possible_moves.append(file + str(rank+1))
+            # pesak se jeste nepohnul
             if rank == 2:
                 possible_moves.append(file + str(rank + 2))
+            # pesak muze neco sebrat
             try:
                 if (self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1)).islower():
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 1))
@@ -185,13 +198,16 @@ class Chess:
                     possible_moves.append(self.INDEX_TO_LETTER[file_num+1] + str(rank+1))
             except:
                 pass
+            # moznost brani mimochodem
             if self.en_passant != '-' and rank == 5 and ((ord(file) == ord(self.en_passant[0])+1) or (ord(file) == ord(self.en_passant[0])-1)):
                 possible_moves.append(self.en_passant)
-                
+        # cerny je na tahu
         else:
             possible_moves.append(file + str(rank - 1))
+            # pesak se jeste nepohnul
             if rank == 2:
                 possible_moves.append(file + str(rank - 2))
+            # pesak muze neco sebrat
             try:
                 if (self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)).isupper():
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
@@ -202,17 +218,10 @@ class Chess:
                     possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
             except:
                 pass
+            # moznost brani mimochodem
             if self.en_passant != '-' and rank == 4 and (
                     (ord(file) == ord(self.en_passant[0]) + 1) or (ord(file) == ord(self.en_passant[0]) - 1)):
                 possible_moves.append(self.en_passant)
-        """
-        possible_moves.append(file + (str(rank+1) if self.white_plays else str(rank - 1)))
-        if (self.white_plays and rank == 2) or (not self.white_plays and rank == 7):
-            possible_moves.append(file + (str(rank + 2) if self.white_plays else str(rank - 2)))
-        if self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num-1], )
-        
-        """
-
         return possible_moves
 
     def get_rook_moves(self, file, rank):
@@ -221,9 +230,19 @@ class Chess:
 
         for r in range(1, 9):
             if r != rank:
+                p = self.__find_piece_on_coords(file, r)
+                if p is not None:
+                    if not self.__is_own_piece(p):
+                        possible_moves.append(file + str(r))
+                    break
                 possible_moves.append(file + str(r))
         for f in range(8):
             if f != file_num:
+                p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
+                if p is not None:
+                    if not self.__is_own_piece(p):
+                        possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
+                    break
                 possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
 
         return possible_moves
@@ -341,6 +360,7 @@ class Chess:
 
 if __name__ == "__main__":
     c = Chess('test.txt')
+    """
     print('white plays' if c.white_plays else 'black plays')
     c.print_board()
     print()
@@ -353,4 +373,11 @@ if __name__ == "__main__":
     c.print_board()
     print()
     print('white plays' if c.white_plays else 'black plays')
+    c.move('g1', 'f3')
+    c.print_board()
+    print()
+    print('white plays' if c.white_plays else 'black plays')
+
     print(c.get_pawn_moves('b', 2))
+    """
+    print(c.get_rook_moves('a', 1))
