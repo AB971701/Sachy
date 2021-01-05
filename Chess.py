@@ -122,16 +122,85 @@ class Chess:
             end_row = self.NUMBER_TO_INDEX[ord(end_position[1]) - ord('0')]
             end_col = self.LETTER_TO_INDEX[end_position[0]]
 
-            # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
+            self.halfmove_reset = False
+
             tmp = self.board[start_row][start_col]
-            self.board[start_row][start_col] = None
-            self.board[end_row][end_col] = tmp
-            # TODO: pridat funkce pro rosadu a brani mimochodem; asi taky funkci pro vyhazovani figurek
+            # brani mimochodem
+            self.en_passant = '-'
+            if tmp in 'pP':
+                if self.white_plays and start_row == 6 and end_row == 4:
+                    self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row - 1])
+                elif not self.white_plays and start_row == 1 and end_row == 3:
+                    self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row + 1])
+                self.halfmove_reset = True  # pawn advance - 50 move rule
+            # rosada
+            elif tmp in 'kK':
+                if tmp == 'k':
+                    self.castling_rights = self.castling_rights.replace('kq', '')
+                else:
+                    self.castling_rights = self.castling_rights.replace('KQ', '')
+                """
+                if self.white_plays and start_position == 'e1' and abs(end_col - start_col) == 2:
+                    self.castling_rights.replace('KQ', '')
+                elif not self.white_plays and start_position == 'e8' and abs(end_col - start_col) == 2:
+                    self.castling_rights.replace('kq', '')"""
+                if self.castling_rights == '':
+                    self.castling_rights = '-'
+            elif tmp in 'rR':
+                if tmp == 'r':
+                    if start_position == 'a8':
+                        self.castling_rights = self.castling_rights.replace('q', '')
+                    elif start_position == 'h8':
+                        self.castling_rights = self.castling_rights.replace('k', '')
+                else:
+                    if start_position == 'a1':
+                        self.castling_rights = self.castling_rights.replace('Q', '')
+                    elif start_position == 'h1':
+                        self.castling_rights = self.castling_rights.replace('K', '')
+
+            if self.board[end_row][end_col] is not None:
+                self.halfmove_reset = True
+
+            # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
+            # tah - rosada
+            if tmp == 'K' and start_position == 'e1' and end_position == 'c1':
+                self.board[7][self.LETTER_TO_INDEX['a']] = None
+                self.board[7][self.LETTER_TO_INDEX['e']] = None
+                self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
+                self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
+            elif tmp == 'K' and start_position == 'e1' and end_position == 'g1':
+                self.board[7][self.LETTER_TO_INDEX['h']] = None
+                self.board[7][self.LETTER_TO_INDEX['e']] = None
+                self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
+                self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
+            elif tmp == 'k' and start_position == 'e8' and end_position == 'c8':
+                self.board[0][self.LETTER_TO_INDEX['a']] = None
+                self.board[0][self.LETTER_TO_INDEX['e']] = None
+                self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
+            elif tmp == 'k' and start_position == 'e8' and end_position == 'g8':
+                self.board[0][self.LETTER_TO_INDEX['h']] = None
+                self.board[0][self.LETTER_TO_INDEX['e']] = None
+                self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
+            # tah - ostatni
+            else:
+                self.board[start_row][start_col] = None
+                self.board[end_row][end_col] = tmp
+
             # TODO: nekam asi ukladat vyhozene figurky??
             # TODO: funkce pro vyber figurky, kdyz pesak dojde na konec
 
+            if self.halfmove_reset:
+                self.half_move = 0
+            else:
+                self.half_move += 1
+            if not self.white_plays:
+                self.full_move += 1
+            print(self.check_checkmate())
+            # TODO: tady nekde kontrola sachu atd.
             self.white_plays = not self.white_plays
-            # TODO: pridat ulozeni tahu do historie
+            self.add_move_to_history()
             return True
         return False
 
@@ -212,6 +281,7 @@ class Chess:
         function finds a piece that is standing at given coordinates
         :param file: = a column of the playboard, 'a' to 'h'
         :param rank: = a row of the playboard, 1 to 8
+        :param board: board from which to get the piece
         :return: piece if there is a piece at given coordinates, else None
         """
         if board is None:
@@ -239,7 +309,6 @@ class Chess:
         :param rank: = a row of the playboard, 1 to 8
         :return: list of all possible pawn moves
         """
-        # TODO: Kontrola figurky pri pohybu dopredu - mam to delat i tady? uz to dela __is_valid()
         possible_moves = []
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
@@ -524,7 +593,6 @@ class Chess:
         :param rank: = a row of the playboard, 1 to 8
         :return: list of all possible king moves
         """
-        # TODO: kontrola sachu (tady nebo to nechat na jine fci spolecne s ostatnimi?)
         possible_moves = []
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
@@ -575,6 +643,11 @@ class Chess:
         return possible_moves
 
     def king_in_check(self, board):
+        """
+        function to get all places from which is king put in a check
+        :param board: chessboard
+        :return: list of all coordinates from which is king put in a check
+        """
         king = 'K' if self.white_plays else 'k'
         row = [row for row in board if king in row][0]
         rank = self.INDEX_TO_NUMBER[board.index(row)]
@@ -731,6 +804,8 @@ class Chess:
 
         return checks
 
+    """ Print board """
+
     def print_board(self):
         # TODO: add function description
         for line in self.board:
@@ -738,8 +813,61 @@ class Chess:
                 print(cell if cell is not None else '-', end=' ')
             print()
 
-    # TODO: - po tahu neni vlastni kral v sachu
     # TODO: pridat 50 move rule
+
+    def add_move_to_history(self):
+        """
+        function saves current
+        :return:
+        """
+        fen = ''
+        empty = 0
+        for row in self.board:
+            empty = 0
+            for square in row:
+                if square is None:
+                    empty += 1
+                else:
+                    if empty != 0:
+                        fen += str(empty)
+                        empty = 0
+                    fen += square
+            if empty != 0:
+                fen += str(empty)
+                empty = 0
+            fen += '/'
+        fen = fen[:-1]
+        fen += ' '
+        fen += 'w' if self.white_plays else 'b'
+        fen += ' '
+        fen += self.castling_rights
+        fen += ' '
+        fen += self.en_passant
+        fen += ' '
+        fen += str(self.half_move)
+        fen += ' '
+        fen += str(self.full_move)
+        self.board_history.append(fen)
+
+    """ End of game """
+
+    def check_checkmate(self):
+        if self.king_in_check(self.board):
+            checkmate = True
+            find = 'K' if self.white_plays else 'k'
+            row = [row for row in self.board if find in row][0]
+            king_row = self.board.index(row)
+            king_col = row.index(find)
+            possible_king_moves = self.get_king_moves(self.INDEX_TO_LETTER[king_col], self.INDEX_TO_NUMBER[king_row])
+            for move in possible_king_moves:
+                board = deepcopy(self.board)
+                board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = find
+                board[king_row][king_col] = None
+                if not self.king_in_check(board):
+                    return False
+                # TODO: dodelat tohlecto haha
+            return True
+        return False
 
 
 def play_from_file(filepath):
@@ -757,4 +885,13 @@ def play_from_file(filepath):
 
 
 if __name__ == "__main__":
+    """c = Chess('test.txt')
+    c.print_board()
+    print()
+    c.move('c7', 'c6')
+    c.print_board()
+    print()
+    print(c.move('e1', 'g1'))
+    c.print_board()
+    print()"""
     play_from_file('hra.txt')
