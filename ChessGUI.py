@@ -101,4 +101,6 @@ class ChessGUI:
                             self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(board[line][square]))
                             canvas.create_image(55 + square * 100, 55 + line * 100, anchor='nw',
                                                 image=self.pieces[line * 8 + square])
-        self.__previous_board = board
+            for i in range(8):
+                for k in range(8):
+                    self.__previous_board[i][k] = board[i][k]
