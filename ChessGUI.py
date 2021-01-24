@@ -3,7 +3,8 @@ from Chess import Chess
 
 class ChessGUI:
     root = tk.Tk()
-    __previous_board = 0
+    canvas = tk.Canvas(bg='grey', width='900', height='900')
+    __previous_board = [[None for _ in range(8)] for _ in range(8)]
     pieces = None
     squares = None
 
@@ -27,11 +28,12 @@ class ChessGUI:
                         j += 1
                     elif c in "12345678":
                         j += ord(c) - ord('0')
-        self.__previous_board = board
-        canvas = tk.Canvas(bg='grey', width='900', height='900')
-        canvas.pack()
-        self.squares = self.__CreateBoard(canvas)
-        self.pieces = self.__PutPieces(canvas, board)
+        for i in range(8):
+            for k in range(8):
+                self.__previous_board[i][k] = board[i][k]
+        self.canvas.pack()
+        self.squares = self.__CreateBoard(self.canvas)
+        self.pieces = self.__PutPieces(self.canvas, board)
 
     def __del__(self):
         pass
