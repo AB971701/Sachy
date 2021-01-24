@@ -91,6 +91,9 @@ class Chess:
 
             tmp = self.board[start_row][start_col]
             # brani mimochodem
+            """
+            Myslím, že tady to chceš maličko upravit, en_passant nebere tu figurku
+            """
             self.en_passant = '-'
             if tmp in 'pP':
                 if self.white_plays and start_row == 6 and end_row == 4:
@@ -287,13 +290,13 @@ class Chess:
                 try:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
+                        possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 1))
                 except:
                     pass
                 try:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
+                        possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 1))
                 except:
                     pass
                 # moznost brani mimochodem

@@ -18,19 +18,21 @@ def play_from_file(filepath):
     c.save_to_file("save.txt")
 
 def callback(event):
+    #mouse click funtion
     global last_click, chess, gui
-    INDEX_TO_LETTER = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
-    NUMBER_TO_INDEX = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
-    new_click = INDEX_TO_LETTER[int((event.x - 50)/ 100)] + str(NUMBER_TO_INDEX[int((event.y - 50 )/ 100)])
+    new_click = chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])
+    #last click is the previous click
     if last_click != None:
-        if chess.move(last_click, INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(NUMBER_TO_INDEX[int((event.y - 50 )/ 100)])):
+        if chess.move(last_click, chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])):
             gui.AfterMove(gui.canvas, chess.board)
             last_click = None
+        else:
+            last_click = new_click
     else:
         last_click = new_click
 
 """
-for the mouse click to work it can´t be in main.
+for the mouse click to work it can´t be in main. (or I don´t know how)
 """
 chess = Chess()
 gui = ChessGUI(chess.board)

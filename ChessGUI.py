@@ -1,19 +1,20 @@
 import tkinter as tk
-from Chess import Chess
 
 class ChessGUI:
     root = tk.Tk()
     canvas = tk.Canvas(bg='grey', width='900', height='900')
+    #previous board
     __previous_board = [[None for _ in range(8)] for _ in range(8)]
     pieces = None
     squares = None
-
+    #choices of images depending on the piece in list
     choices = {'Q': 'Images/w_queen.png', 'K': 'Images/w_king.png', 'B': 'Images/w_bishop.png',
                'N': 'Images/w_knight.png', 'R': 'Images/w_rook.png', 'P': 'Images/w_pawn.png',
                'q': 'Images/b_queen.png', 'k': 'Images/b_king.png', 'b': 'Images/b_bishop.png',
                'n': 'Images/b_knight.png', 'r': 'Images/b_rook.png', 'p': 'Images/b_pawn.png'}
 
     def __init__(self, board=None):
+        #constructor
         if board == None:
             board_history = ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1']
             tmp = (board_history[-1][0:board_history[-1].find(' ')]).split('/')
@@ -36,12 +37,15 @@ class ChessGUI:
         self.pieces = self.__PutPieces(self.canvas, board)
 
     def __del__(self):
+        #destructor
         pass
 
     def End(self):
+        #ends the cycle
         self.root.mainloop()
 
     def __CreateBoard(self, canvas):
+        #creates the board
         squares = []
         for i in range(8):
             for k in range(8):
@@ -59,11 +63,11 @@ class ChessGUI:
                                                            150 + k * 100,
                                                            fill='dark olive green',
                                                            outline=""))
-        pismena = "abcdefgh"
+        letters = "abcdefgh"
         for i in range(8):
             canvas.create_text((i + 1) * 100,
                                900 - 25,
-                               text=pismena[i],
+                               text=letters[i],
                                font='Arial',
                                fill='black')
             canvas.create_text(25,
@@ -74,6 +78,7 @@ class ChessGUI:
         return squares
 
     def __PutPieces(self, canvas, board):
+        #procedure needed just to create the first board
         pieces = []
         for line in range(len(board)):
             for square in range(len(board[line])):
@@ -86,6 +91,7 @@ class ChessGUI:
         return pieces
 
     def AfterMove(self, canvas, board):
+        #after every move refreshes the board
         if self.__previous_board != board:
             for line in range(len(board)):
                 for square in range(len(board[line])):
