@@ -14,6 +14,7 @@ class Chess:
             with open(filepath, 'r') as f:
                 self.board_history = [moves for moves in f]
             current = self.board_history[-1]
+            current = current.strip()
             pF = current.find(' ')
             self.white_plays = True if current[pF:pF + 2] == 'w' else False
             pF += 3
@@ -60,43 +61,6 @@ class Chess:
         pass
 
     """ Prace se soubory """
-
-    def load_from_file(self, filepath):
-        """
-        loads game from file
-        :param filepath: path to txt file from which is the game loaded
-        :return: full board history
-        """
-        # nacte hru z filu a rozdeli tahy
-        with open(filepath, "r") as file:
-            self.board_history = [line.strip() for line in file]
-        # vytvori hraci plochu z posledniho zahraneho tahu
-        self.__create_board()
-
-        # nacte, kdo je na tahu
-        posFirst = self.board_history[-1].find(' ')
-        posLast = self.board_history[-1].find(' ', posFirst + 1)
-        self.white_plays = True if self.board_history[-1][posFirst:posLast] else False
-
-        # nacte, kde jde udelat rosadu
-        posFirst = posLast
-        posLast = self.board_history[-1].find(' ', posFirst + 1)
-        self.castling_rights = self.board_history[-1][posFirst:posLast]
-
-        # nacte, jestli jde brat mimochodem
-        posFirst = posLast
-        posLast = self.board_history[-1].find(' ', posFirst + 1)
-        self.en_passant = self.board_history[-1][posFirst:posLast]
-
-        # nacte kolik "pultahu" ubehlo od posledniho sebrani figurky nebo pohnuti pescem
-        posFirst = posLast
-        posLast = self.board_history[-1].find(' ', posFirst + 1)
-        self.half_move = ord(self.board_history[-1][posFirst:posLast]) - ord('0')
-
-        # nacte kolik tahu probehlo od zacatku hry
-        posFirst = posLast
-        posLast = self.board_history[-1].find(' ', posFirst + 1)
-        self.full_move = ord(self.board_history[-1][posFirst:posLast]) - ord('0')
 
     def save_to_file(self, filepath):
         """
@@ -889,8 +853,8 @@ def play_from_file(filepath):
 
 
 if __name__ == "__main__":
-    """c = Chess('test.txt')
-    c.print_board()
+    c = Chess('fen.txt')
+    """c.print_board()
     print()
     c.move('c7', 'c6')
     c.print_board()
@@ -898,4 +862,5 @@ if __name__ == "__main__":
     print(c.move('e1', 'g1'))
     c.print_board()
     print()"""
-    play_from_file('hra.txt')
+    #play_from_file('hra.txt')
+
