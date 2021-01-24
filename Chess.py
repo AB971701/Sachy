@@ -105,7 +105,8 @@ class Chess:
         :return:
         """
         with open(filepath, "w") as file:
-            file.write("%s\n" % self.board_history)
+            for move in self.board_history:
+                file.write("%s\n" % move)
 
     """ Move execution """
 
@@ -200,7 +201,7 @@ class Chess:
             print(self.check_checkmate())
             # TODO: tady nekde kontrola sachu atd.
             self.white_plays = not self.white_plays
-            self.add_move_to_history()
+            self.__add_move_to_history()
             return True
         return False
 
@@ -217,7 +218,7 @@ class Chess:
         if not self.game_over:
             # kontroluje spravnost souradnic
             if self.__coord_valid(start_position) and self.__coord_valid(end_position):
-                # kontroluje jestli je na danych pcatecnih souradnicich vlastni figurka
+                # kontroluje jestli je na danych pcatecnich souradnicich vlastni figurka
                 if self.__is_own_piece(
                         self.__find_piece_on_coords(start_position[0], ord(start_position[1]) - ord('0'))):
                     # kontroluje jestli je tah pro figurku podle pravidel sachu legalni
@@ -807,7 +808,6 @@ class Chess:
     """ Print board """
 
     def print_board(self):
-        # TODO: add function description
         for line in self.board:
             for cell in line:
                 print(cell if cell is not None else '-', end=' ')
@@ -815,7 +815,7 @@ class Chess:
 
     # TODO: pridat 50 move rule
 
-    def add_move_to_history(self):
+    def __add_move_to_history(self):
         """
         function saves current
         :return:
@@ -854,18 +854,17 @@ class Chess:
     def check_checkmate(self):
         if self.king_in_check(self.board):
             checkmate = True
-            find = 'K' if self.white_plays else 'k'
-            row = [row for row in self.board if find in row][0]
+            king = 'K' if self.white_plays else 'k'
+            row = [row for row in self.board if king in row][0]
             king_row = self.board.index(row)
-            king_col = row.index(find)
+            king_col = row.index(king)
             possible_king_moves = self.get_king_moves(self.INDEX_TO_LETTER[king_col], self.INDEX_TO_NUMBER[king_row])
             for move in possible_king_moves:
                 board = deepcopy(self.board)
-                board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = find
+                board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
                 board[king_row][king_col] = None
                 if not self.king_in_check(board):
                     return False
-                # TODO: dodelat tohlecto haha
             return True
         return False
 
@@ -874,14 +873,19 @@ def play_from_file(filepath):
     c = Chess()
     with open(filepath) as file:
         moves = [(move.strip()).split(',') for move in file]
+    i=1
     for move in moves:
-        print('white plays' if c.white_plays else 'black plays')
+        print(i, 'white plays' if c.white_plays else 'black plays')
         if c.move(move[0], move[1]):
             c.print_board()
             print()
         else:
             print('invalid move')
             break
+        if (c.check_checkmate()):
+            print('game over')
+            break
+        i+=1
 
 
 if __name__ == "__main__":
