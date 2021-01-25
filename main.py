@@ -20,16 +20,16 @@ def play_from_file(filepath):
 def callback(event):
     #mouse click funtion
     global last_click, chess, gui
-    new_click = chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])
     #last click is the previous click
-    if last_click != None:
-        if chess.move(last_click, chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])):
-            gui.AfterMove(gui.canvas, chess.board)
-            last_click = None
+    if event.x >= 50 and event.x <= 850 and event.y >= 50 and event.y <= 850:
+        if last_click != None:
+            if chess.move(last_click, chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])):
+                gui.AfterMove(gui.canvas, chess.board)
+                last_click = None
+            else:
+                last_click = chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])
         else:
-            last_click = new_click
-    else:
-        last_click = new_click
+            last_click = chess.INDEX_TO_LETTER[int((event.x - 50 )/ 100)] + str(chess.INDEX_TO_NUMBER[int((event.y - 50 )/ 100)])
 
 """
 for the mouse click to work it can´t be in main. (or I don´t know how)
