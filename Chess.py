@@ -15,8 +15,8 @@ class Chess:
                 self.board_history = [moves for moves in f]
             current = self.board_history[-1]
             current = current.strip()
-            pF = current.find(' ')
-            self.white_plays = True if current[pF:pF + 2] == 'w' else False
+            pF = current.find(' ') + 1
+            self.white_plays = True if current[pF:pF + 1] == 'w' else False
             pF += 3
             pL = current.find(' ', pF)
             self.castling_rights = current[pF:pL]
@@ -90,10 +90,44 @@ class Chess:
             self.halfmove_reset = False
 
             tmp = self.board[start_row][start_col]
+
+            # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
+            # tah - rosada
+            if tmp == 'K' and start_position == 'e1' and end_position == 'c1':
+                self.board[7][self.LETTER_TO_INDEX['a']] = None
+                self.board[7][self.LETTER_TO_INDEX['e']] = None
+                self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
+                self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
+            elif tmp == 'K' and start_position == 'e1' and end_position == 'g1':
+                self.board[7][self.LETTER_TO_INDEX['h']] = None
+                self.board[7][self.LETTER_TO_INDEX['e']] = None
+                self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
+                self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
+            elif tmp == 'k' and start_position == 'e8' and end_position == 'c8':
+                self.board[0][self.LETTER_TO_INDEX['a']] = None
+                self.board[0][self.LETTER_TO_INDEX['e']] = None
+                self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
+            elif tmp == 'k' and start_position == 'e8' and end_position == 'g8':
+                self.board[0][self.LETTER_TO_INDEX['h']] = None
+                self.board[0][self.LETTER_TO_INDEX['e']] = None
+                self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
+            # tah - en passant
+            elif tmp in 'pP' and self.en_passant == end_position:
+                print(start_position, end_position)
+                print(end_row, end_col)
+                self.board[start_row][start_col] = None
+                self.board[end_row][end_col] = tmp
+                ep_row = (end_row - 1) if (tmp == 'p') else (end_row + 1)
+                self.board[ep_row][end_col] = None
+            # tah - ostatni
+            else:
+                self.board[start_row][start_col] = None
+                self.board[end_row][end_col] = tmp
+
+            # TOHLE UZ NENI TAH
             # brani mimochodem
-            """
-            Myslím, že tady to chceš maličko upravit, en_passant nebere tu figurku
-            """
             self.en_passant = '-'
             if tmp in 'pP':
                 if self.white_plays and start_row == 6 and end_row == 4:
@@ -126,35 +160,8 @@ class Chess:
                     elif start_position == 'h1':
                         self.castling_rights = self.castling_rights.replace('K', '')
 
-            if self.board[end_row][end_col] is not None:
-                self.halfmove_reset = True
-
-            # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
-            # tah - rosada
-            if tmp == 'K' and start_position == 'e1' and end_position == 'c1':
-                self.board[7][self.LETTER_TO_INDEX['a']] = None
-                self.board[7][self.LETTER_TO_INDEX['e']] = None
-                self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
-                self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
-            elif tmp == 'K' and start_position == 'e1' and end_position == 'g1':
-                self.board[7][self.LETTER_TO_INDEX['h']] = None
-                self.board[7][self.LETTER_TO_INDEX['e']] = None
-                self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
-                self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
-            elif tmp == 'k' and start_position == 'e8' and end_position == 'c8':
-                self.board[0][self.LETTER_TO_INDEX['a']] = None
-                self.board[0][self.LETTER_TO_INDEX['e']] = None
-                self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
-                self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
-            elif tmp == 'k' and start_position == 'e8' and end_position == 'g8':
-                self.board[0][self.LETTER_TO_INDEX['h']] = None
-                self.board[0][self.LETTER_TO_INDEX['e']] = None
-                self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
-                self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
-            # tah - ostatni
-            else:
-                self.board[start_row][start_col] = None
-                self.board[end_row][end_col] = tmp
+                if self.board[end_row][end_col] is not None:
+                    self.halfmove_reset = True
 
             # TODO: nekam asi ukladat vyhozene figurky??
             # TODO: funkce pro vyber figurky, kdyz pesak dojde na konec
@@ -837,10 +844,12 @@ class Chess:
 
 
 def play_from_file(filepath):
-    c = Chess()
+    c = Chess('test.txt')
+    c.print_board()
     with open(filepath) as file:
         moves = [(move.strip()).split(',') for move in file]
-    i=1
+        print(moves)
+    i = 1
     for move in moves:
         print(i, 'white plays' if c.white_plays else 'black plays')
         if c.move(move[0], move[1]):
@@ -852,12 +861,12 @@ def play_from_file(filepath):
         if (c.check_checkmate()):
             print('game over')
             break
-        i+=1
+        i += 1
 
 
 if __name__ == "__main__":
-    c = Chess('fen.txt')
-    """c.print_board()
+    """c = Chess('fen.txt')
+    c.print_board()
     print()
     c.move('c7', 'c6')
     c.print_board()
@@ -865,5 +874,4 @@ if __name__ == "__main__":
     print(c.move('e1', 'g1'))
     c.print_board()
     print()"""
-    #play_from_file('hra.txt')
-
+    play_from_file('hraII.txt')
