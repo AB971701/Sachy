@@ -6,7 +6,8 @@ class ChessGUI:
     #previous board
     __previous_board = [[None for _ in range(8)] for _ in range(8)]
     pieces = None
-    squares = None
+    white = []
+    possible_moves = []
     #choices of images depending on the piece in list
     choices = {'Q': 'Images/w_queen.png', 'K': 'Images/w_king.png', 'B': 'Images/w_bishop.png',
                'N': 'Images/w_knight.png', 'R': 'Images/w_rook.png', 'P': 'Images/w_pawn.png',
@@ -45,22 +46,24 @@ class ChessGUI:
         self.root.mainloop()
 
     def __CreateBoard(self, canvas):
-        #creates the board
         squares = []
+        #creates the board
         for i in range(8):
             for k in range(8):
                 if (i + k) % 2 == 0:
-                    squares.append(canvas.create_rectangle(50 + i * 100,
-                                                           50 + k * 100,
-                                                           150 + i * 100,
-                                                           150 + k * 100,
-                                                           fill='pale goldenrod',
-                                                           outline=""))
+                    sq = self.canvas.create_rectangle(50 + k * 100,
+                                                       50 + i * 100,
+                                                       150 + k * 100,
+                                                       150 + i * 100,
+                                                       fill='pale goldenrod',
+                                                       outline="")
+                    self.white.append(sq)
+                    squares.append(sq)
                 else:
-                    squares.append(canvas.create_rectangle(50 + i * 100,
-                                                           50 + k * 100,
-                                                           150 + i * 100,
+                    squares.append(canvas.create_rectangle(50 + k * 100,
+                                                           50 + i * 100,
                                                            150 + k * 100,
+                                                           150 + i * 100,
                                                            fill='dark olive green',
                                                            outline=""))
         letters = "abcdefgh"
@@ -110,3 +113,11 @@ class ChessGUI:
             for i in range(8):
                 for k in range(8):
                     self.__previous_board[i][k] = board[i][k]
+
+    def ChangeColor(self, color1, color2):
+        for square in self.possible_moves:
+            if square in self.white:
+                self.canvas.itemconfig(square, fill=color1)
+            else:
+                self.canvas.itemconfig(square, fill=color2)
+
