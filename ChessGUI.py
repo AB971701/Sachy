@@ -236,8 +236,7 @@ class ChessGUI:
         Saves the current game.
         :return:
         """
-        #TODO
-        pass
+        self.chess.save_to_file(self.text.get())
 
     def __GetFilepathS(self):
         """
@@ -256,7 +255,7 @@ class ChessGUI:
         """
         #Adding options to a menu
         self.menubar.add_command(label="New game", command=self.__NewGame)
-        self.menubar.add_command(label="Save game", command=self.__GetFilepathS())
+        self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
         self.menubar.add_command(label="Quit", command=self.root.quit)
 
