@@ -21,7 +21,11 @@ class ChessGUI:
                'n': 'Images/b_knight.png', 'r': 'Images/b_rook.png', 'p': 'Images/b_pawn.png'}
 
     def __init__(self, Chess, board=None):
+        """
         #constructor
+        :param Chess: Chess game
+        :param board: chessboard
+        """
         if board == None:
             board_history = ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1']
             tmp = (board_history[-1][0:board_history[-1].find(' ')]).split('/')
@@ -50,6 +54,11 @@ class ChessGUI:
         pass
 
     def callback(self, event):
+        """
+        A function after mouse click
+        :param event: mouse click
+        :return:
+        """
         # mouse click funtion
         piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
         # last click is the previous click
@@ -84,6 +93,7 @@ class ChessGUI:
                 self.AfterMove()
                 self.ChangeColor('pale goldenrod', 'dark olive green')
                 self.possible_moves_gui.clear()
+                self.possible_moves.clear()
                 self.last_click = None
             else:
                 self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
@@ -93,6 +103,11 @@ class ChessGUI:
                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
 
     def __CreateBoard(self, canvas):
+        """
+        A function that creates a visual board
+        :param canvas: canvas
+        :return:
+        """
         squares = []
         #creates the board
         for i in range(8):
@@ -128,6 +143,12 @@ class ChessGUI:
         return squares
 
     def __PutPieces(self, canvas, board):
+        """
+        A function that visually puts pieces on the board
+        :param canvas: canvas
+        :param board: chessboard
+        :return:
+        """
         #procedure needed just to create the first board
         pieces = []
         for line in range(len(board)):
@@ -141,6 +162,10 @@ class ChessGUI:
         return pieces
 
     def AfterMove(self):
+        """
+        A function that is refreshes the board to the current state, always needed after a move.
+        :return:
+        """
         #after every move refreshes the board
         if self.__previous_board != self.chess.board:
             for line in range(len(self.chess.board)):
@@ -162,18 +187,32 @@ class ChessGUI:
                     self.__previous_board[i][k] = self.chess.board[i][k]
 
     def ChangeColor(self, color1, color2):
+        """
+        A function that changes the color of squares a piece can move to.
+        :param color1: color for white squares
+        :param color2: color for black squares
+        :return:
+        """
         for square in self.possible_moves_gui:
             if square in self.white:
                 self.canvas.itemconfig(square, fill=color1)
             else:
                 self.canvas.itemconfig(square, fill=color2)
 
-    def NewGame(self):
+    def __NewGame(self):
+        """
+        Creates a new game
+        :return:
+        """
         #create new game
         self.chess = Chess()
         self.AfterMove()
 
-    def __function(self):
+    def __load(self):
+        """
+        Loads another game.
+        :return:
+        """
         try:
             self.chess = Chess(self.text.get())
             self.AfterMove()
@@ -182,16 +221,43 @@ class ChessGUI:
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
 
-    def __GetFilepath(self):
+    def __GetFilepathL(self):
+        """
+        Creates a box where you can write the filepath of your saved game.
+        :return:
+        """
         self.main = tk.Toplevel(self.root)
         self.text = tk.StringVar()
         tk.Entry(self.main, textvariable=self.text).grid(column=0, row=0)
-        tk.Button(self.main, text="Enter", command=self.__function).grid(column=0, row=1)
+        tk.Button(self.main, text="Enter", command=self.__load).grid(column=0, row=1)
+
+    def __save(self):
+        """
+        Saves the current game.
+        :return:
+        """
+        #TODO
+        pass
+
+    def __GetFilepathS(self):
+        """
+        Creates a box where you can write where to save the game.
+        :return:
+        """
+        self.main = tk.Toplevel(self.root)
+        self.text = tk.StringVar()
+        tk.Entry(self.main, textvariable=self.text).grid(column=0, row=0)
+        tk.Button(self.main, text="Enter", command=self.__save).grid(column=0, row=1)
 
     def End(self):
+        """
+        creates the buttons on top
+        :return:
+        """
         #Adding options to a menu
-        self.menubar.add_command(label="New game", command=self.NewGame)
-        self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepath())
+        self.menubar.add_command(label="New game", command=self.__NewGame)
+        self.menubar.add_command(label="Save game", command=self.__GetFilepathS())
+        self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
         self.menubar.add_command(label="Quit", command=self.root.quit)
 
         self.root.config(menu=self.menubar)
