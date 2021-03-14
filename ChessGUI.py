@@ -95,10 +95,10 @@ class ChessGUI:
                 self.possible_moves_gui.clear()
                 self.possible_moves.clear()
                 self.last_click = None
-            else:
+            elif piece != None:
                 self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                     self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-        else:
+        elif piece != None:
             self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
 
