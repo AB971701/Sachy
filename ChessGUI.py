@@ -214,7 +214,7 @@ class ChessGUI:
         :return:
         """
         try:
-            self.chess = Chess(self.text.get())
+            self.chess = Chess(self.text.get() + ".txt")
             self.AfterMove()
             self.main.destroy()
             self.main.update()
@@ -236,7 +236,8 @@ class ChessGUI:
         Saves the current game.
         :return:
         """
-        self.chess.save_to_file(self.text.get())
+        self.chess.save_to_file(self.text.get() + ".txt")
+        self.main.destroy()
 
     def __GetFilepathS(self):
         """
@@ -247,6 +248,45 @@ class ChessGUI:
         self.text = tk.StringVar()
         tk.Entry(self.main, textvariable=self.text).grid(column=0, row=0)
         tk.Button(self.main, text="Enter", command=self.__save).grid(column=0, row=1)
+
+    def Promotion(self):
+        """
+        Makes a box to choose which piece you want to promote to
+        :return:
+        """
+        self.promo = tk.Toplevel(self.root)
+        if Chess.white_plays == True:
+            tk.Button(self.promo, image="Images/w_queen.png", command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            tk.Button(self.promo, image="Images/w_rook.png", command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            tk.Button(self.promo, image="Images/w_bishop.png", command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            tk.Button(self.promo, image="Images/w_knight.png", command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+        else:
+            tk.Button(self.promo, image="Images/b_queen.png", command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            tk.Button(self.promo, image="Images/b_rook.png", command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            tk.Button(self.promo, image="Images/b_bishop.png", command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            tk.Button(self.promo, image="Images/b_knight.png", command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+        pass
+
+    def OnButtonClick(self, button_id):
+        """
+        :param button_id: decides which promotion is it going to be
+        :return:
+        """
+        if button_id == 0:
+            #promote to Queen
+
+            pass
+        elif button_id == 1:
+            #promote to rook
+            pass
+        elif button_id == 2:
+            # promote to bishop
+            pass
+        elif button_id == 3:
+            # promote to knight
+            pass
+        self.promo.destroy()
+
 
     def End(self):
         """
