@@ -172,7 +172,8 @@ class Chess:
                 self.half_move += 1
             if not self.white_plays:
                 self.full_move += 1
-            print(self.check_checkmate())
+            if self.check_checkmate():
+                self.game_over = True
             # TODO: tady nekde kontrola sachu atd.
             self.white_plays = not self.white_plays
             self.__add_move_to_history()
@@ -572,6 +573,7 @@ class Chess:
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
 
+            # TODO: tady se nekde musi kontrolovat jestli nebude kral v sachu pokud na to pole vstoupi!!!
             if 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank - 1)
                 if not self.__is_own_piece(piece):
@@ -604,11 +606,13 @@ class Chess:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
+
             # rosada
+            # TODO: kontrola volnych poli
             if self.white_plays:
-                if 'K' in self.castling_rights:
+                if ('K' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['f']][0]) and (self.board[self.LETTER_TO_INDEX['g']][0]):
                     possible_moves.append('g1')
-                if 'Q' in self.castling_rights:
+                if ('Q' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['b']][0]) and (self.board[self.LETTER_TO_INDEX['c']][0]) and (self.board[self.LETTER_TO_INDEX['d']][0]):
                     possible_moves.append('c1')
             else:
                 if 'k' in self.castling_rights:
@@ -616,6 +620,29 @@ class Chess:
                 if 'q' in self.castling_rights:
                     possible_moves.append('c8')
         return possible_moves
+
+    def get_moves(self, file, rank):
+        """
+        returns all possible moves for a piece standing on given coordinates; if there is no piece, returns None
+        :param file:
+        :param rank:
+        :return: all possible piece moves or None if there is no piece at given coordinates
+        """
+        piece = self.__find_piece_on_coords(file, rank)
+        if piece in 'Kk':
+            return self.get_king_moves(file, rank)
+        elif piece in 'Qq':
+            return self.get_queen_moves(file, rank)
+        elif piece in 'Pp':
+            return self.get_pawn_moves(file, rank)
+        elif piece in 'Rr':
+            return self.get_rook_moves(file, rank)
+        elif piece in 'Nn':
+            return self.get_knight_moves(file, rank)
+        elif piece in 'Bb':
+            return self.get_bishop_moves(file, rank)
+        else:
+            return None
 
     def king_in_check(self, board):
         """
@@ -874,4 +901,8 @@ if __name__ == "__main__":
     print(c.move('e1', 'g1'))
     c.print_board()
     print()"""
-    play_from_file('hraII.txt')
+    #play_from_file('hraII.txt')
+    c = Chess('mat.txt')
+    print(c.board)
+    print(c.get_king_moves('g', 8))
+    print(c.check_checkmate())
