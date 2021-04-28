@@ -185,6 +185,12 @@ class ChessGUI:
             for i in range(8):
                 for k in range(8):
                     self.__previous_board[i][k] = self.chess.board[i][k]
+                    if self.chess.check_checkmate():
+                        self.canvas.create_text(450,
+                                                450,
+                                                text="Game finished",
+                                                font=('Arial', 50),
+                                                fill='red')
 
     def ChangeColor(self, color1, color2):
         """
