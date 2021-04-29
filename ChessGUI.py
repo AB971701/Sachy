@@ -1,5 +1,6 @@
 import tkinter as tk
 from Chess import Chess
+from Minimax import Minimax
 
 class ChessGUI:
     root = tk.Tk()
@@ -48,6 +49,7 @@ class ChessGUI:
         self.pieces = self.__PutPieces(self.canvas, board)
         self.chess = Chess
         self.root.bind("<Button-1>", self.callback)
+        self.mimax = Minimax(self.chess)
 
     def __del__(self):
         #destructor
@@ -191,6 +193,7 @@ class ChessGUI:
                                                 text="Game finished",
                                                 font=('Arial', 50),
                                                 fill='red')
+        print(self.mimax.minmax(self.chess.white_plays))
 
     def ChangeColor(self, color1, color2):
         """

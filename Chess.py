@@ -629,20 +629,23 @@ class Chess:
         :return: all possible piece moves or None if there is no piece at given coordinates
         """
         piece = self.__find_piece_on_coords(file, rank)
-        if (self.white_plays and piece.islower()) or (not self.white_plays and not piece.islower()):
-            return None
-        if piece in 'Kk':
-            return self.get_king_moves(file, rank)
-        elif piece in 'Qq':
-            return self.get_queen_moves(file, rank)
-        elif piece in 'Pp':
-            return self.get_pawn_moves(file, rank)
-        elif piece in 'Rr':
-            return self.get_rook_moves(file, rank)
-        elif piece in 'Nn':
-            return self.get_knight_moves(file, rank)
-        elif piece in 'Bb':
-            return self.get_bishop_moves(file, rank)
+        if piece != None:
+            if (self.white_plays and piece.islower()) or (not self.white_plays and not piece.islower()):
+                return None
+            if piece in 'Kk':
+                return self.get_king_moves(file, rank)
+            elif piece in 'Qq':
+                return self.get_queen_moves(file, rank)
+            elif piece in 'Pp':
+                return self.get_pawn_moves(file, rank)
+            elif piece in 'Rr':
+                return self.get_rook_moves(file, rank)
+            elif piece in 'Nn':
+                return self.get_knight_moves(file, rank)
+            elif piece in 'Bb':
+                return self.get_bishop_moves(file, rank)
+            else:
+                return None
         else:
             return None
 
