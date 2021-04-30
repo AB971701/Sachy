@@ -95,7 +95,6 @@ class Chess:
             # tah - rosada
             if tmp in 'kK':
                 king_moves = self.get_king_moves(start_position[0], ord(start_position[1]) - ord('0'))
-                print(king_moves, self.castling_rights)
                 if tmp == 'K' and 'K' in self.castling_rights and 'g1' in king_moves:
                     self.board[7][self.LETTER_TO_INDEX['h']] = None
                     self.board[7][self.LETTER_TO_INDEX['e']] = None
@@ -122,8 +121,6 @@ class Chess:
 
             # tah - en passant
             elif tmp in 'pP' and self.en_passant == end_position and self.en_passant in self.get_pawn_moves(start_position[0], ord(start_position[1]) - ord('0')):
-                print(start_position, end_position)
-                print(end_row, end_col)
                 self.board[start_row][start_col] = None
                 self.board[end_row][end_col] = tmp
                 ep_row = (end_row - 1) if (tmp == 'p') else (end_row + 1)
@@ -347,7 +344,6 @@ class Chess:
                 if self.en_passant != '-' and rank == 4 and (
                         (ord(file) == ord(self.en_passant[0]) + 1) or (ord(file) == ord(self.en_passant[0]) - 1)):
                     possible_moves.append(self.en_passant)
-        print(possible_moves)
         return possible_moves
 
     def get_rook_moves(self, file, rank):
