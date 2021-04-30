@@ -145,11 +145,6 @@ class Chess:
                     self.castling_rights = self.castling_rights.replace('kq', '')
                 else:
                     self.castling_rights = self.castling_rights.replace('KQ', '')
-                """
-                if self.white_plays and start_position == 'e1' and abs(end_col - start_col) == 2:
-                    self.castling_rights.replace('KQ', '')
-                elif not self.white_plays and start_position == 'e8' and abs(end_col - start_col) == 2:
-                    self.castling_rights.replace('kq', '')"""
                 if self.castling_rights == '':
                     self.castling_rights = '-'
             elif tmp in 'rR':
@@ -264,10 +259,11 @@ class Chess:
         :param board: board from which to get the piece
         :return: piece if there is a piece at given coordinates, else None
         """
-        if board is None:
-            return self.board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
-        else:
-            return board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
+        if file in 'abcdefgh' and 0<rank<9:
+            if board is None:
+                return self.board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
+            else:
+                return board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
 
     def __is_own_piece(self, piece):
         """
@@ -295,11 +291,11 @@ class Chess:
 
             # bily je na tahu
             if self.white_plays:
-                if (self.board[self.NUMBER_TO_INDEX[rank + 1]][file_num] is None) and (rank + 1 < 9):
+                if (rank + 1 < 9) and (self.board[self.NUMBER_TO_INDEX[rank + 1]][file_num] is None):
                     possible_moves.append(file + str(rank + 1))
 
                 # pesak se jeste nepohnul
-                if rank == 2 and self.board[self.NUMBER_TO_INDEX[4]][file_num] is None:
+                if rank == 2 and self.board[self.NUMBER_TO_INDEX[3]][file_num] is None and self.board[self.NUMBER_TO_INDEX[4]][file_num] is None:
                     possible_moves.append(file + str(4))
 
                 # pesak muze neco sebrat
@@ -321,11 +317,11 @@ class Chess:
 
             # cerny je na tahu
             else:
-                if (self.board[self.NUMBER_TO_INDEX[rank - 1]][file_num] is None) and (rank - 1 > 0):
+                if (rank - 1 > 0) and (self.board[self.NUMBER_TO_INDEX[rank - 1]][file_num] is None):
                     possible_moves.append(file + str(rank - 1))
 
                 # pesak se jeste nepohnul
-                if rank == 7 and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None:
+                if rank == 7 and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None:
                     possible_moves.append(file + str(5))
 
                 # pesak muze neco sebrat
@@ -377,7 +373,7 @@ class Chess:
                 possible_moves.append(file + str(r))
             # radek
             # -doleva
-            for f in range(file_num - 1, 0, -1):
+            for f in range(file_num - 1, -1, -1):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
                 if p is not None:
@@ -505,87 +501,8 @@ class Chess:
         :param rank: = a row of the playboard, 1 to 8
         :return: list of all possible queen moves
         """
-        possible_moves = []
-        if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
-            file_num = self.LETTER_TO_INDEX[file]
+        possible_moves = self.get_rook_moves(file, rank) + self.get_bishop_moves(file, rank)
 
-            if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
-                file_num = self.LETTER_TO_INDEX[file]
-                # sloupec
-                for r in range(rank - 1, 0, -1):
-                    # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                    p = self.__find_piece_on_coords(file, r)
-                    if p is not None:
-                        if not self.__is_own_piece(p):
-                            possible_moves.append(file + str(r))
-                        break
-                    possible_moves.append(file + str(r))
-                for r in range(rank + 1, 8):
-                    # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                    p = self.__find_piece_on_coords(file, r)
-                    if p is not None:
-                        if not self.__is_own_piece(p):
-                            possible_moves.append(file + str(r))
-                        break
-                    possible_moves.append(file + str(r))
-                # radek
-                for f in range(file_num - 1, 0, -1):
-                    # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                    p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
-                    if p is not None:
-                        if not self.__is_own_piece(p):
-                            possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
-                        break
-                    possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
-                for f in range(file_num + 1, 8):
-                    # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                    p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
-                    if p is not None:
-                        if not self.__is_own_piece(p):
-                            possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
-                        break
-                    possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
-
-            i = 1
-            while (file_num - i >= 0) and (rank - i > 0):
-                # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank - i)
-                if p is not None:
-                    if not self.__is_own_piece(p):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank - i))
-                    break
-                possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank - i))
-                i += 1
-            i = 1
-            while (file_num - i >= 0) and (rank + i < 9):
-                # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank + i)
-                if p is not None:
-                    if not self.__is_own_piece(p):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank + i))
-                    break
-                possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank + i))
-                i += 1
-            i = 1
-            while (file_num + i < 8) and (rank - i > 0):
-                # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank - i)
-                if p is not None:
-                    if not self.__is_own_piece(p):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank - i))
-                    break
-                possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank - i))
-                i += 1
-            i = 1
-            while (file_num + i < 8) and (rank + i < 9):
-                # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
-                p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank + i)
-                if p is not None:
-                    if not self.__is_own_piece(p):
-                        possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank + i))
-                    break
-                possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank + i))
-                i += 1
         return possible_moves
 
     def get_king_moves(self, file, rank):
@@ -700,6 +617,8 @@ class Chess:
         :return: list of all coordinates from which is king put in a check
         """
         king = 'K' if self.white_plays else 'k'
+        #print([row for row in board if king in row])
+        print(board)
         row = [row for row in board if king in row][0]
         rank = self.INDEX_TO_NUMBER[board.index(row)]
         file_num = row.index(king)
