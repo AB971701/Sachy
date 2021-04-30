@@ -36,14 +36,14 @@ class Minimax:
                     for row in range(len(board[0])):
                         possible_moves.append([self.chess.INDEX_TO_LETTER[row] + str(self.chess.INDEX_TO_NUMBER[column]),
                                                self.chess.get_moves(self.chess.INDEX_TO_LETTER[row], self.chess.INDEX_TO_NUMBER[column])])
-            print(possible_moves)
             for piece in possible_moves: #TODO
                 if piece[1] is not None:
                     for move in piece[1]:
-                        self.chess.board[self.chess.LETTER_TO_INDEX[move[0]]][self.chess.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]] = self.chess.board[
-                            self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]]
-                        self.chess.board[self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]] = None
+                        self.chess.board[self.chess.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.chess.LETTER_TO_INDEX[move[0]]] = self.chess.board[
+                            self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]]
+                        self.chess.board[self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]] = None
                         values.append([self.chess.board, self.minmax(not white_plays, deep + 1)])
+                        print(board)
                         self.chess.board = deepcopy(board)
 
             if white_plays:
