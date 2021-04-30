@@ -19,6 +19,7 @@ class Minimax:
         :param deep:
         :return:
         """
+        self.chess.white_plays = white_plays
         possible_moves = []
         values = []
         if self.chess.check_checkmate() == True:
@@ -36,6 +37,13 @@ class Minimax:
                     for row in range(len(board[0])):
                         possible_moves.append([self.chess.INDEX_TO_LETTER[row] + str(self.chess.INDEX_TO_NUMBER[column]),
                                                self.chess.get_moves(self.chess.INDEX_TO_LETTER[row], self.chess.INDEX_TO_NUMBER[column])])
+            for piece in possible_moves:  # TODO
+                if piece[1] is not None:
+                    for move in piece[1]:
+                        print(self.chess.move(piece[0], move))
+                        values.append([self.chess.board, self.minmax(white_plays, deep + 1)])
+                        self.chess.board = deepcopy(board)
+            """
             for piece in possible_moves: #TODO
                 if piece[1] is not None:
                     for move in piece[1]:
@@ -43,9 +51,11 @@ class Minimax:
                             self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]]
                         self.chess.board[self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]] = None
                         values.append([self.chess.board, self.minmax(not white_plays, deep + 1)])
-                        print(board)
                         self.chess.board = deepcopy(board)
-
+            """
+            self.chess.white_plays = not self.chess.white_plays
+            if deep == 0:
+                print(min(values, key=lambda x: x[1])[0])
             if white_plays:
                 if deep == 0:
                     return max(values, key=lambda x: x[1])[0]

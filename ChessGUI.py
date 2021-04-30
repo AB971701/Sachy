@@ -310,8 +310,8 @@ class ChessGUI:
         self.menubar.add_command(label="New game", command=self.__NewGame)
         self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
-        self.menubar.add_command(label="Quit", command=self.root.quit)
         self.menubar.add_command(label="Ai or Player", command=self.AiVSP)
+        self.menubar.add_command(label="Quit", command=self.root.quit)
 
         self.root.config(menu=self.menubar)
         #ends the cycle
