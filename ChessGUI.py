@@ -14,6 +14,7 @@ class ChessGUI:
     possible_moves = []
     possible_moves_gui = []
     last_click = None
+    against_player = True
 
     #choices of images depending on the piece in list
     choices = {'Q': 'Images/w_queen.png', 'K': 'Images/w_king.png', 'B': 'Images/w_bishop.png',
@@ -92,7 +93,8 @@ class ChessGUI:
             if self.last_click != None:
                 if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
-                    self.chess.board = self.mimax.minmax(self.chess.white_plays)
+                    if self.against_player is False:
+                        self.chess.board = self.mimax.minmax(self.chess.white_plays)
                     self.AfterMove()
                     self.ChangeColor('pale goldenrod', 'dark olive green')
                     self.possible_moves_gui.clear()
@@ -296,6 +298,8 @@ class ChessGUI:
             pass
         self.promo.destroy()
 
+    def AiVSP(self):
+        self.against_player = not self.against_player
 
     def End(self):
         """
@@ -307,6 +311,7 @@ class ChessGUI:
         self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
         self.menubar.add_command(label="Quit", command=self.root.quit)
+        self.menubar.add_command(label="Ai or Player", command=self.AiVSP)
 
         self.root.config(menu=self.menubar)
         #ends the cycle
