@@ -3,7 +3,7 @@ import random
 from copy import deepcopy
 
 class Minimax:
-    depth = 5
+    depth = 3
 
     def __init__(self, Chess):
         self.chess = Chess
@@ -20,32 +20,42 @@ class Minimax:
         :return:
         """
         possible_moves = []
+        values = []
         if self.chess.check_checkmate() == True:
             if white_plays:
                 # Chess.white_plays
-                minimax = -1
+                return -1
             else:
-                minimax = 1
+                return 1
         else:
             if deep == self.depth:
                 return self.GiveValue()
             else:
                 board = deepcopy(self.chess.board)
                 for column in range(len(board[0])):
-                    for row in range(column):
+                    for row in range(len(board[0])):
                         possible_moves.append([self.chess.INDEX_TO_LETTER[row] + str(self.chess.INDEX_TO_NUMBER[column]),
                                                self.chess.get_moves(self.chess.INDEX_TO_LETTER[row], self.chess.INDEX_TO_NUMBER[column])])
+            print(possible_moves)
             for piece in possible_moves: #TODO
-                for move in piece[1]:
-                    self.chess.board[self.chess.LETTER_TO_INDEX[move[0]]][self.chess.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]] = self.chess.board[
-                        self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]]
-                    self.chess.board[self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]] = None
-                    self.chess.board = deepcopy(board)
-                    if white_plays:
-                        return max(self.minmax(not white_plays, deep +1))
-                    else:
-                        return min(self.minmax(not white_plays, deep + 1))
+                if piece[1] is not None:
+                    for move in piece[1]:
+                        self.chess.board[self.chess.LETTER_TO_INDEX[move[0]]][self.chess.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]] = self.chess.board[
+                            self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]]
+                        self.chess.board[self.chess.LETTER_TO_INDEX[piece[0][0]]][self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]] = None
+                        values.append([self.chess.board, self.minmax(not white_plays, deep + 1)])
+                        self.chess.board = deepcopy(board)
 
+            if white_plays:
+                if deep == 0:
+                    return max(values, key=lambda x: x[1])[0]
+                else:
+                    return max(values, key=lambda x: x[1])[1]
+            else:
+                if deep == 0:
+                    return min(values, key=lambda x: x[1])[0]
+                else:
+                    return min(values, key=lambda x: x[1])[1]
 
 
 

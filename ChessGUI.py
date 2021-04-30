@@ -61,10 +61,10 @@ class ChessGUI:
         :param event: mouse click
         :return:
         """
-        # mouse click funtion
-        piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
         # last click is the previous click
         if event.x >= 50 and event.x <= 850 and event.y >= 50 and event.y <= 850:
+            # mouse click funtion
+            piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
             self.ChangeColor('pale goldenrod', 'dark olive green')
             self.possible_moves_gui.clear()
             if piece != None:
@@ -89,20 +89,21 @@ class ChessGUI:
             for move in self.possible_moves:
                 self.possible_moves_gui.append(self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
             self.ChangeColor('seashell3', 'seashell4')
-        if self.last_click != None:
-            if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                    self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
-                self.AfterMove()
-                self.ChangeColor('pale goldenrod', 'dark olive green')
-                self.possible_moves_gui.clear()
-                self.possible_moves.clear()
-                self.last_click = None
+            if self.last_click != None:
+                if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
+                    self.chess.board = self.mimax.minmax(self.chess.white_plays)
+                    self.AfterMove()
+                    self.ChangeColor('pale goldenrod', 'dark olive green')
+                    self.possible_moves_gui.clear()
+                    self.possible_moves.clear()
+                    self.last_click = None
+                elif piece != None:
+                    self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
             elif piece != None:
                 self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                     self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-        elif piece != None:
-            self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
 
     def __CreateBoard(self, canvas):
         """
@@ -193,7 +194,6 @@ class ChessGUI:
                                                 text="Game finished",
                                                 font=('Arial', 50),
                                                 fill='red')
-        print(self.mimax.minmax(self.chess.white_plays))
 
     def ChangeColor(self, color1, color2):
         """
