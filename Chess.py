@@ -87,34 +87,41 @@ class Chess:
             end_row = self.NUMBER_TO_INDEX[ord(end_position[1]) - ord('0')]
             end_col = self.LETTER_TO_INDEX[end_position[0]]
 
-            self.halfmove_reset = False
+            halfmove_reset = False
 
             tmp = self.board[start_row][start_col]
 
             # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
             # tah - rosada
-            if tmp == 'K' and start_position == 'e1' and end_position == 'c1':
-                self.board[7][self.LETTER_TO_INDEX['a']] = None
-                self.board[7][self.LETTER_TO_INDEX['e']] = None
-                self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
-                self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
-            elif tmp == 'K' and start_position == 'e1' and end_position == 'g1':
-                self.board[7][self.LETTER_TO_INDEX['h']] = None
-                self.board[7][self.LETTER_TO_INDEX['e']] = None
-                self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
-                self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
-            elif tmp == 'k' and start_position == 'e8' and end_position == 'c8':
-                self.board[0][self.LETTER_TO_INDEX['a']] = None
-                self.board[0][self.LETTER_TO_INDEX['e']] = None
-                self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
-                self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
-            elif tmp == 'k' and start_position == 'e8' and end_position == 'g8':
-                self.board[0][self.LETTER_TO_INDEX['h']] = None
-                self.board[0][self.LETTER_TO_INDEX['e']] = None
-                self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
-                self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
+            if tmp in 'kK':
+                king_moves = self.get_king_moves(start_position[0], ord(start_position[1]) - ord('0'))
+                print(king_moves, self.castling_rights)
+                if tmp == 'K' and 'K' in self.castling_rights and 'g1' in king_moves:
+                    self.board[7][self.LETTER_TO_INDEX['h']] = None
+                    self.board[7][self.LETTER_TO_INDEX['e']] = None
+                    self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
+                    self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
+                elif tmp == 'K' and 'Q' in self.castling_rights and 'c1' in king_moves:
+                    self.board[7][self.LETTER_TO_INDEX['a']] = None
+                    self.board[7][self.LETTER_TO_INDEX['e']] = None
+                    self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
+                    self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
+                elif tmp == 'k' and 'k' in self.castling_rights and 'g8' in king_moves:
+                    self.board[0][self.LETTER_TO_INDEX['h']] = None
+                    self.board[0][self.LETTER_TO_INDEX['e']] = None
+                    self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                    self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
+                elif tmp == 'k' and 'q' in self.castling_rights and 'c8' in king_moves:
+                    self.board[0][self.LETTER_TO_INDEX['a']] = None
+                    self.board[0][self.LETTER_TO_INDEX['e']] = None
+                    self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                    self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
+                else:
+                    self.board[start_row][start_col] = None
+                    self.board[end_row][end_col] = tmp
+
             # tah - en passant
-            elif tmp in 'pP' and self.en_passant == end_position:
+            elif tmp in 'pP' and self.en_passant == end_position and self.en_passant in self.get_pawn_moves(start_position[0], ord(start_position[1]) - ord('0')):
                 print(start_position, end_position)
                 print(end_row, end_col)
                 self.board[start_row][start_col] = None
@@ -134,7 +141,7 @@ class Chess:
                     self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row - 1])
                 elif not self.white_plays and start_row == 1 and end_row == 3:
                     self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row + 1])
-                self.halfmove_reset = True  # pawn advance - 50 move rule
+                halfmove_reset = True  # pawn advance - 50 move rule
             # rosada
             elif tmp in 'kK':
                 if tmp == 'k':
@@ -161,12 +168,12 @@ class Chess:
                         self.castling_rights = self.castling_rights.replace('K', '')
 
                 if self.board[end_row][end_col] is not None:
-                    self.halfmove_reset = True
+                    halfmove_reset = True
 
             # TODO: nekam asi ukladat vyhozene figurky??
             # TODO: funkce pro vyber figurky, kdyz pesak dojde na konec
 
-            if self.halfmove_reset:
+            if halfmove_reset:
                 self.half_move = 0
             else:
                 self.half_move += 1
@@ -291,7 +298,6 @@ class Chess:
 
             # bily je na tahu
             if self.white_plays:
-                print(self.board[self.NUMBER_TO_INDEX[rank]][file_num], file+str(rank))
                 if (self.board[self.NUMBER_TO_INDEX[rank + 1]][file_num] is None) and (rank + 1 < 9):
                     possible_moves.append(file + str(rank + 1))
 
@@ -327,19 +333,21 @@ class Chess:
 
                 # pesak muze neco sebrat
                 # -sikmo
-                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
-                if (piece is not None) and (not self.__is_own_piece(piece)):
-                    possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
+                if file_num > 0:
+                    piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
+                    if (piece is not None) and (not self.__is_own_piece(piece)):
+                        possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
                 # -sikmo
-                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1)
-                if (piece is not None) and (not self.__is_own_piece(piece)):
-                    possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
+                if file_num < 7:
+                    piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1)
+                    if (piece is not None) and (not self.__is_own_piece(piece)):
+                        possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
 
                 # moznost brani mimochodem
                 if self.en_passant != '-' and rank == 4 and (
                         (ord(file) == ord(self.en_passant[0]) + 1) or (ord(file) == ord(self.en_passant[0]) - 1)):
                     possible_moves.append(self.en_passant)
-
+        print(possible_moves)
         return possible_moves
 
     def get_rook_moves(self, file, rank):
@@ -353,6 +361,7 @@ class Chess:
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
             # sloupec
+            # -dolu
             for r in range(rank - 1, 0, -1):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(file, r)
@@ -361,6 +370,7 @@ class Chess:
                         possible_moves.append(file + str(r))
                     break
                 possible_moves.append(file + str(r))
+            # -nahoru
             for r in range(rank + 1, 8):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(file, r)
@@ -370,6 +380,7 @@ class Chess:
                     break
                 possible_moves.append(file + str(r))
             # radek
+            # -doleva
             for f in range(file_num - 1, 0, -1):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
@@ -378,6 +389,7 @@ class Chess:
                         possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
                     break
                 possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
+            # -doprava
             for f in range(file_num + 1, 8):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
@@ -399,27 +411,35 @@ class Chess:
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
 
+            # 2x doleva, 1x dolu
             if 0 <= (file_num - 2) <= 7 and 0 < (rank - 1) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank - 1)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - 2] + str(rank - 1))
+            # 1x doleva, 2x dolu
             if 0 <= (file_num - 1) <= 7 and 0 < (rank - 2) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 2)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 2))
+            # 1x doprava, 2x dolu
             if 0 <= (file_num + 1) <= 7 and 0 < (rank - 2) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 2)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 2))
+            # 2x doprava, 1x dolu
             if 0 <= (file_num + 2) <= 7 and 0 < (rank - 1) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank - 1)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + 2] + str(rank - 1))
+            # 2x doprava, 1x nahoru
             if 0 <= (file_num + 2) <= 7 and 0 < (rank + 1) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank + 1)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + 2] + str(rank + 1))
+            # 1x doprava, 2x nahoru
             if 0 <= (file_num + 1) <= 7 and 0 < (rank + 2) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 2)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 2))
+            # 1x doleva, 2x nahoru
             if 0 <= (file_num - 1) <= 7 and 0 < (rank + 2) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 2)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 2))
+            # 2x doleva, 1x nahoru
             if 0 <= (file_num - 2) <= 7 and 0 < (rank + 1) <= 8 and not self.__is_own_piece(
                     self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank + 1)):
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - 2] + str(rank + 1))
@@ -437,6 +457,7 @@ class Chess:
             file_num = self.LETTER_TO_INDEX[file]
 
             i = 1
+            # doleva dolu
             while (file_num - i >= 0) and (rank - i > 0):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank - i)
@@ -447,6 +468,7 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank - i))
                 i += 1
             i = 1
+            # doleva nahoru
             while (file_num - i >= 0) and (rank + i < 9):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank + i)
@@ -457,6 +479,7 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - i] + str(rank + i))
                 i += 1
             i = 1
+            # doprava dolu
             while (file_num + i < 8) and (rank - i > 0):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank - i)
@@ -467,6 +490,7 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank - i))
                 i += 1
             i = 1
+            # doprava nahoru
             while (file_num + i < 8) and (rank + i < 9):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank + i)
@@ -580,56 +604,68 @@ class Chess:
             file_num = self.LETTER_TO_INDEX[file]
 
             # TODO: tady se nekde musi kontrolovat jestli nebude kral v sachu pokud na to pole vstoupi!!!
+            # dolu
             if 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank - 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(file + str(rank - 1))
+            # sikmo dolu vpravo
             if 0 <= (file_num + 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
+            # vpravo
             if 0 <= (file_num + 1) <= 7:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank))
+            # sikmo nahoru vpravo
             if 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 1))
+            # nahoru
             if 0 <= (rank + 1) <= 7:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank + 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(file + str(rank + 1))
+            # sikmo nahoru vlevo
             if 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 1))
+            # vlevo
             if 0 <= (file_num - 1) <= 7:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank))
+            # sikmo dolu vlevo
             if 0 <= (file_num - 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
 
             # rosada
-            # TODO: kontrola volnych poli
+            # TODO: kontrola sachu – kral nemuze byt v sachu ani na zacatku, ani v prubehu, ani na konci
             if self.white_plays:
-                if ('K' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['f']][0] is None) and (
-                        self.board[self.LETTER_TO_INDEX['g']][0] is None):
+                # kingside
+                if ('K' in self.castling_rights) and (self.board[-1][self.LETTER_TO_INDEX['f']] is None) and (
+                        self.board[-1][self.LETTER_TO_INDEX['g']] is None):
                     possible_moves.append('g1')
-                if ('Q' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['b']][0] is None) and (
-                        self.board[self.LETTER_TO_INDEX['c']][0] is None) and (
-                        self.board[self.LETTER_TO_INDEX['d']][0] is None):
+                # queenside
+                if ('Q' in self.castling_rights) and (self.board[-1][self.LETTER_TO_INDEX['b']] is None) and (
+                        self.board[-1][self.LETTER_TO_INDEX['c']] is None) and (
+                        self.board[-1][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c1')
             else:
-                if ('k' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['f']][-1] is None) and (
-                        self.board[self.LETTER_TO_INDEX['g']][-1] is None):
+                # kingside
+                if ('k' in self.castling_rights) and (self.board[0][self.LETTER_TO_INDEX['f']] is None) and (
+                        self.board[0][self.LETTER_TO_INDEX['g']] is None):
                     possible_moves.append('g8')
-                if ('k' in self.castling_rights) and (self.board[self.LETTER_TO_INDEX['b']][-1] is None) and (
-                        self.board[self.LETTER_TO_INDEX['c']][-1] is None) and (
-                        self.board[self.LETTER_TO_INDEX['d']][-1] is None):
+                # queenside
+                if ('k' in self.castling_rights) and (self.board[0][self.LETTER_TO_INDEX['b']] is None) and (
+                        self.board[0][self.LETTER_TO_INDEX['c']] is None) and (
+                        self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
         return possible_moves
 
