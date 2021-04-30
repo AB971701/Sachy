@@ -120,7 +120,8 @@ class Chess:
                     self.board[end_row][end_col] = tmp
 
             # tah - en passant
-            elif tmp in 'pP' and self.en_passant == end_position and self.en_passant in self.get_pawn_moves(start_position[0], ord(start_position[1]) - ord('0')):
+            elif tmp in 'pP' and self.en_passant == end_position and self.en_passant in self.get_pawn_moves(
+                    start_position[0], ord(start_position[1]) - ord('0')):
                 self.board[start_row][start_col] = None
                 self.board[end_row][end_col] = tmp
                 ep_row = (end_row - 1) if (tmp == 'p') else (end_row + 1)
@@ -259,11 +260,13 @@ class Chess:
         :param board: board from which to get the piece
         :return: piece if there is a piece at given coordinates, else None
         """
-        if file in 'abcdefgh' and 0<rank<9:
+        if file in 'abcdefgh' and 0 < rank < 9:
             if board is None:
                 return self.board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
             else:
                 return board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]]
+        else:
+            raise ValueError
 
     def __is_own_piece(self, piece):
         """
@@ -295,17 +298,18 @@ class Chess:
                     possible_moves.append(file + str(rank + 1))
 
                 # pesak se jeste nepohnul
-                if rank == 2 and self.board[self.NUMBER_TO_INDEX[3]][file_num] is None and self.board[self.NUMBER_TO_INDEX[4]][file_num] is None:
+                if rank == 2 and self.board[self.NUMBER_TO_INDEX[3]][file_num] is None and \
+                        self.board[self.NUMBER_TO_INDEX[4]][file_num] is None:
                     possible_moves.append(file + str(4))
 
                 # pesak muze neco sebrat
-                # -sikmo
-                if file_num > 0:
+                # -sikmo nahoru vlevo
+                if file_num > 0 and rank < 8:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
                         possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 1))
-                # -sikmo
-                if file_num < 7:
+                # -sikmo nahoru vpravo
+                if file_num < 7 and rank < 8:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
                         possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 1))
@@ -321,17 +325,18 @@ class Chess:
                     possible_moves.append(file + str(rank - 1))
 
                 # pesak se jeste nepohnul
-                if rank == 7 and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None:
+                if rank == 7 and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None and \
+                        self.board[self.NUMBER_TO_INDEX[5]][file_num] is None:
                     possible_moves.append(file + str(5))
 
                 # pesak muze neco sebrat
-                # -sikmo
-                if file_num > 0:
+                # -sikmo dolu vlevo
+                if file_num > 0 and rank > 1:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
                         possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
-                # -sikmo
-                if file_num < 7:
+                # -sikmo dolu vpravo
+                if file_num < 7 and rank > 1:
                     piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1)
                     if (piece is not None) and (not self.__is_own_piece(piece)):
                         possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
@@ -617,7 +622,7 @@ class Chess:
         :return: list of all coordinates from which is king put in a check
         """
         king = 'K' if self.white_plays else 'k'
-        #print([row for row in board if king in row])
+        # print([row for row in board if king in row])
         print(board)
         row = [row for row in board if king in row][0]
         rank = self.INDEX_TO_NUMBER[board.index(row)]
