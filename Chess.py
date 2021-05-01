@@ -1,6 +1,10 @@
 from copy import deepcopy
 
 
+class PromotePawnException(Exception):
+    pass
+
+
 class Chess:
     LETTER_TO_INDEX = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     INDEX_TO_LETTER = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
@@ -96,23 +100,23 @@ class Chess:
             if tmp in 'kK':
                 king_moves = self.get_king_moves(start_position[0], ord(start_position[1]) - ord('0'))
                 if tmp == 'K' and 'K' in self.castling_rights and 'g1' in king_moves:
-                    self.board[7][self.LETTER_TO_INDEX['h']] = None
-                    self.board[7][self.LETTER_TO_INDEX['e']] = None
+                    self.board[7][self.LETTER_TO_INDEX['h']] = None  # rook
+                    self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
                 elif tmp == 'K' and 'Q' in self.castling_rights and 'c1' in king_moves:
-                    self.board[7][self.LETTER_TO_INDEX['a']] = None
-                    self.board[7][self.LETTER_TO_INDEX['e']] = None
+                    self.board[7][self.LETTER_TO_INDEX['a']] = None  # rook
+                    self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
                 elif tmp == 'k' and 'k' in self.castling_rights and 'g8' in king_moves:
-                    self.board[0][self.LETTER_TO_INDEX['h']] = None
-                    self.board[0][self.LETTER_TO_INDEX['e']] = None
+                    self.board[0][self.LETTER_TO_INDEX['h']] = None  # rook
+                    self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
                     self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
                 elif tmp == 'k' and 'q' in self.castling_rights and 'c8' in king_moves:
-                    self.board[0][self.LETTER_TO_INDEX['a']] = None
-                    self.board[0][self.LETTER_TO_INDEX['e']] = None
+                    self.board[0][self.LETTER_TO_INDEX['a']] = None  # rook
+                    self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
                     self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
                 else:
@@ -174,9 +178,14 @@ class Chess:
                 self.full_move += 1
             if self.check_checkmate():
                 self.game_over = True
-            # TODO: tady nekde kontrola sachu atd.
             self.white_plays = not self.white_plays
+
+            # check in pawn is at the end
+            if (not self.white_plays and tmp == 'P' and end_row == 0) or (self.white_plays and tmp == 'p' and end_row == 7):
+                self.__add_move_to_history()
+                raise PromotePawnException
             self.__add_move_to_history()
+
             return True
         return False
 
@@ -206,7 +215,7 @@ class Chess:
                         tmp = board[start_row][start_col]
                         board[start_row][start_col] = None
                         board[end_row][end_col] = tmp
-                        if not self.king_in_check(board):
+                        if not self.king_in_check(board=board):
                             return True
         return False
 
@@ -278,6 +287,24 @@ class Chess:
             if (piece.isupper() and self.white_plays) or (piece.islower() and not self.white_plays):
                 return True
         return False
+
+    def promote_pawn(self, piece):
+        """
+        function finds pawn at the first/eight (depending on current player) and promotes it to given piece
+        :param piece: letter representing piece (lowercase for black, uppercase for white)
+        :return:
+        """
+        if self.white_plays: # = hledam cerneho pesaka
+            for file in 'abcdefgh':
+                if self.__find_piece_on_coords(file, 1) == 'p':
+                    self.board[7][self.LETTER_TO_INDEX[file]] = piece.lower()
+                    break
+        else:
+            for file in 'abcdefgh':
+                if self.__find_piece_on_coords(file, 8) == 'P':
+                    self.board[0][self.LETTER_TO_INDEX[file]] = piece.upper()
+                    break
+
 
     """ Piece moves """
 
@@ -452,7 +479,6 @@ class Chess:
         possible_moves = []
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
-
             i = 1
             # doleva dolu
             while (file_num - i >= 0) and (rank - i > 0):
@@ -521,7 +547,6 @@ class Chess:
         if self.__is_own_piece(self.__find_piece_on_coords(file, rank)):
             file_num = self.LETTER_TO_INDEX[file]
 
-            # TODO: tady se nekde musi kontrolovat jestli nebude kral v sachu pokud na to pole vstoupi!!!
             # dolu
             if 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank - 1)
@@ -585,6 +610,31 @@ class Chess:
                         self.board[0][self.LETTER_TO_INDEX['c']] is None) and (
                         self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
+
+            # find and delete moves that would lead to check
+            king = 'K' if self.white_plays else 'k'
+            delete_moves = []
+            for move in possible_moves:
+                board = deepcopy(self.board)
+                # castling
+                if move in ['g1', 'c1', 'g8', 'c8']:
+                    rook = 'R' if self.white_plays else 'r'
+                    rank_index = self.NUMBER_TO_INDEX[ord(rank) - ord('0')]
+                    self.board[rank_index][self.LETTER_TO_INDEX[file]] = None
+                    self.board[rank_index][self.LETTER_TO_INDEX[move[0]]] = king
+                    if move[0] == 'g':
+                        self.board[rank_index][self.LETTER_TO_INDEX['h']] = None
+                        self.board[rank_index][self.LETTER_TO_INDEX['f']] = rook
+                    else:
+                        self.board[rank_index][self.LETTER_TO_INDEX['a']] = None
+                        self.board[rank_index][self.LETTER_TO_INDEX['d']] = rook
+                # other moves
+                board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
+                board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                if self.king_in_check(board=board):
+                    delete_moves.append(move)
+            for move in delete_moves:
+                possible_moves.remove(move)
         return possible_moves
 
     def get_moves(self, file, rank):
@@ -597,7 +647,7 @@ class Chess:
         piece = self.__find_piece_on_coords(file, rank)
         if piece is not None:
             if (self.white_plays and piece.islower()) or (not self.white_plays and not piece.islower()):
-                return None
+                return []
             if piece in 'Kk':
                 return self.get_king_moves(file, rank)
             elif piece in 'Qq':
@@ -611,19 +661,20 @@ class Chess:
             elif piece in 'Bb':
                 return self.get_bishop_moves(file, rank)
             else:
-                return None
+                return []
         else:
-            return None
+            return []
 
-    def king_in_check(self, board):
+    def king_in_check(self, **kwargs):
         """
         function to get all places from which is king put in a check
         :param board: chessboard
         :return: list of all coordinates from which is king put in a check
         """
+        board=self.board
+        if 'board' in kwargs:
+            board = kwargs['board']
         king = 'K' if self.white_plays else 'k'
-        # print([row for row in board if king in row])
-        print(board)
         row = [row for row in board if king in row][0]
         rank = self.INDEX_TO_NUMBER[board.index(row)]
         file_num = row.index(king)
@@ -631,6 +682,7 @@ class Chess:
         checks = []
         # checks for checks from rooks and queen
         # horizontal direction
+        # -to the left
         for f in range(file_num - 1, 0, -1):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
             if self.__is_own_piece(piece):
@@ -639,6 +691,7 @@ class Chess:
                 if piece.lower() in 'rq':
                     checks.append(self.INDEX_TO_LETTER[f] + str(rank))
                     break
+        # -to the right
         for f in range(file_num + 1, 8):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
             if self.__is_own_piece(piece):
@@ -649,6 +702,7 @@ class Chess:
                     break
 
         # vertical direction
+        # -down
         for r in range(rank - 1, 0, -1):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], r, board)
             if self.__is_own_piece(piece):
@@ -657,6 +711,7 @@ class Chess:
                 if piece.lower() in 'rq':
                     checks.append(self.INDEX_TO_LETTER[file_num] + str(r))
                     break
+        # -up
         for r in range(rank + 1, 9):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], r, board)
             if self.__is_own_piece(piece):
@@ -669,6 +724,7 @@ class Chess:
         # checks for checks from bishops and queen
         # from left to right
         i = 1
+        # -up
         while (file_num - i) >= 0 and (rank - i) > 0:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank - i, board)
             if self.__is_own_piece(piece):
@@ -679,6 +735,7 @@ class Chess:
                     break
             i += 1
         i = 1
+        # -down
         while (file_num + i) < 8 and (rank + i) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank + i, board)
             if self.__is_own_piece(piece):
@@ -691,6 +748,7 @@ class Chess:
 
         # from right to left
         i = 1
+        # -down
         while (file_num + i) < 8 and (rank - i) > 0:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank - i, board)
             if self.__is_own_piece(piece):
@@ -701,6 +759,7 @@ class Chess:
                     break
             i += 1
         i = 1
+        # -up
         while (file_num - i) >= 0 and (rank + i) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank + i, board)
             if self.__is_own_piece(piece):
@@ -712,41 +771,49 @@ class Chess:
             i += 1
 
         # checks for checks from knights
+        # - 2x doleva, 1x dolu
         if 0 <= (file_num - 2) <= 7 and 0 < (rank - 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank - 1, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num - 2] + str(rank - 1))
+        # - 1x doleva, 2x dolu
         if 0 <= (file_num - 1) <= 7 and 0 < (rank - 2) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 2, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 2))
+        # - 1x doprava, 2x dolu
         if 0 <= (file_num + 1) <= 7 and 0 < (rank - 2) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 2, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 2))
+        # - 2x doprava, 1x dolu
         if 0 <= (file_num + 2) <= 7 and 0 < (rank - 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank - 1, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num + 2] + str(rank - 1))
+        # - 2x doprava, 1x nahoru
         if 0 <= (file_num + 2) <= 7 and 0 < (rank + 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank + 1, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num + 2] + str(rank + 1))
+        # - 1x doprava, 2x nahoru
         if 0 <= (file_num + 1) <= 7 and 0 < (rank + 2) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 2, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 2))
+        # - 1x doleva, 2x nahoru
         if 0 <= (file_num - 1) <= 7 and 0 < (rank + 2) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 2, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
                 if piece.lower() == 'n':
                     checks.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 2))
+        # - 2x doleva, 1x nahoru
         if 0 <= (file_num - 2) <= 7 and 0 < (rank + 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank + 1, board)
             if (piece is not None) and (not self.__is_own_piece(piece)):
@@ -755,22 +822,26 @@ class Chess:
 
         # checks for checks from pawns
         if self.white_plays:
+            # bottom .eft
             if 0 <= (file_num - 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1, board)
                 if (piece is not None) and (not self.__is_own_piece(piece)):
                     if piece == 'p':
                         checks.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
+            # bottom right
             if 0 <= (file_num + 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1, board)
                 if (piece is not None) and (not self.__is_own_piece(piece)):
                     if piece == 'p':
                         checks.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank - 1))
         else:
+            # top left
             if 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1, board)
                 if (piece is not None) and (not self.__is_own_piece(piece)):
                     if piece == 'P':
                         checks.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank + 1))
+            # top right
             if 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1, board)
                 if (piece is not None) and (not self.__is_own_piece(piece)):
@@ -826,7 +897,7 @@ class Chess:
     """ End of game """
 
     def check_checkmate(self):
-        if self.king_in_check(self.board):
+        if self.king_in_check():
             checkmate = True
             king = 'K' if self.white_plays else 'k'
             row = [row for row in self.board if king in row][0]
@@ -837,7 +908,7 @@ class Chess:
                 board = deepcopy(self.board)
                 board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
                 board[king_row][king_col] = None
-                if not self.king_in_check(board):
+                if not self.king_in_check(board=board):
                     return False
             return True
         return False

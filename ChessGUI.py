@@ -1,5 +1,5 @@
 import tkinter as tk
-from Chess import Chess
+from Chess import Chess, PromotePawnException
 from Minimax import Minimax
 
 class ChessGUI:
@@ -68,41 +68,32 @@ class ChessGUI:
             piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
             self.ChangeColor('pale goldenrod', 'dark olive green')
             self.possible_moves_gui.clear()
-            if piece != None:
-                if piece in 'pP':
-                    self.possible_moves = self.chess.get_pawn_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                          self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                elif piece in 'rR':
-                    self.possible_moves = self.chess.get_rook_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                          self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                elif piece in 'bB':
-                    self.possible_moves = self.chess.get_bishop_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                elif piece in 'nN':
-                    self.possible_moves = self.chess.get_knight_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                elif piece in 'qQ':
-                    self.possible_moves = self.chess.get_queen_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                           self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                elif piece in 'kK':
-                    self.possible_moves = self.chess.get_king_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
+            self.possible_moves = self.chess.get_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
                                                           self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
             for move in self.possible_moves:
                 self.possible_moves_gui.append(self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
             self.ChangeColor('seashell3', 'seashell4')
             if self.last_click != None:
-                if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
-                    if self.against_player is False:
-                        self.mimax.minmax(self.chess.white_plays)
+                try:
+                    if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
+                        if self.against_player is False:
+                            self.mimax.minmax(self.chess.white_plays)
+                        self.AfterMove()
+                        self.ChangeColor('pale goldenrod', 'dark olive green')
+                        self.possible_moves_gui.clear()
+                        self.possible_moves.clear()
+                        self.last_click = None
+                    elif piece != None:
+                        self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                except PromotePawnException:
+                    self.Promotion()
                     self.AfterMove()
                     self.ChangeColor('pale goldenrod', 'dark olive green')
                     self.possible_moves_gui.clear()
                     self.possible_moves.clear()
                     self.last_click = None
-                elif piece != None:
-                    self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
             elif piece != None:
                 self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                     self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
@@ -271,16 +262,16 @@ class ChessGUI:
         :return:
         """
         self.promo = tk.Toplevel(self.root)
-        if Chess.white_plays == True:
-            tk.Button(self.promo, image="Images/w_queen.png", command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
-            tk.Button(self.promo, image="Images/w_rook.png", command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
-            tk.Button(self.promo, image="Images/w_bishop.png", command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
-            tk.Button(self.promo, image="Images/w_knight.png", command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+        if self.chess.white_plays:
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['q']), command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['r']), command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['b']), command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['n']), command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
         else:
-            tk.Button(self.promo, image="Images/b_queen.png", command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
-            tk.Button(self.promo, image="Images/b_rook.png", command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
-            tk.Button(self.promo, image="Images/b_bishop.png", command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
-            tk.Button(self.promo, image="Images/b_knight.png", command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['Q']), command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['R']), command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['B']), command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['N']), command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
         pass
 
     def OnButtonClick(self, button_id):
@@ -289,18 +280,18 @@ class ChessGUI:
         :return:
         """
         if button_id == 0:
-            #promote to Queen
-
-            pass
+            # promote to Queen
+            self.chess.promote_pawn('q')
         elif button_id == 1:
-            #promote to rook
-            pass
+            # promote to rook
+            self.chess.promote_pawn('r')
         elif button_id == 2:
             # promote to bishop
-            pass
+            self.chess.promote_pawn('b')
         elif button_id == 3:
             # promote to knight
-            pass
+            self.chess.promote_pawn('n')
+        self.AfterMove()
         self.promo.destroy()
 
     def AiVSP(self):
