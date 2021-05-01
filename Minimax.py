@@ -9,7 +9,7 @@ class Minimax:
     def __init__(self, Chess):
         self.chess = Chess
 
-    def minmax(self, white_plays, deep = 0):
+    def minmax(self, deep = 0):
         """
         LETTER_TO_INDEX = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
         INDEX_TO_LETTER = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
@@ -21,6 +21,7 @@ class Minimax:
         """
         possible_moves = []
         values = []
+        white_plays = self.chess.white_plays
         if self.chess.check_checkmate() == True:
             if white_plays:
                 # Chess.white_plays
@@ -41,7 +42,7 @@ class Minimax:
                     for move in piece[1]:
                         self.chess.move(piece[0], move)
                         self.chess.white_plays = white_plays
-                        values.append([piece[0], move, self.minmax(white_plays, deep + 1)])
+                        values.append([piece[0], move, self.minmax(deep + 1)])
                         self.chess.board = deepcopy(board)
             """
             for piece in possible_moves: #TODO

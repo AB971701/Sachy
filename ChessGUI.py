@@ -78,7 +78,7 @@ class ChessGUI:
                     if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
                             self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
                         if self.against_player is False:
-                            self.mimax.minmax(self.chess.white_plays)
+                            self.mimax.minmax()
                         self.AfterMove()
                         self.ChangeColor('pale goldenrod', 'dark olive green')
                         self.possible_moves_gui.clear()
