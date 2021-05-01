@@ -1,13 +1,13 @@
 from Chess import Chess
 import random
 from copy import deepcopy
+import time
 
 class Minimax:
     depth = 3
 
     def __init__(self, Chess):
         self.chess = Chess
-        self.parent_board = deepcopy(self.chess.board)
 
     def minmax(self, white_plays, deep = 0):
         """
@@ -19,7 +19,6 @@ class Minimax:
         :param deep:
         :return:
         """
-        self.chess.white_plays = white_plays
         possible_moves = []
         values = []
         if self.chess.check_checkmate() == True:
@@ -40,8 +39,9 @@ class Minimax:
             for piece in possible_moves:  # TODO
                 if piece[1] is not None:
                     for move in piece[1]:
-                        print(self.chess.move(piece[0], move))
-                        values.append([self.chess.board, self.minmax(white_plays, deep + 1)])
+                        self.chess.move(piece[0], move)
+                        self.chess.white_plays = white_plays
+                        values.append([piece[0], move, self.minmax(white_plays, deep + 1)])
                         self.chess.board = deepcopy(board)
             """
             for piece in possible_moves: #TODO
@@ -53,23 +53,15 @@ class Minimax:
                         values.append([self.chess.board, self.minmax(not white_plays, deep + 1)])
                         self.chess.board = deepcopy(board)
             """
-            self.chess.white_plays = not self.chess.white_plays
             if deep == 0:
-                print(min(values, key=lambda x: x[1])[0])
+                if white_plays:
+                    self.chess.move(max(values, key=lambda x: x[2])[0], max(values, key=lambda x: x[2])[1])
+                else:
+                    self.chess.move(min(values, key=lambda x: x[2])[0], min(values, key=lambda x: x[2])[1])
             if white_plays:
-                if deep == 0:
-                    return max(values, key=lambda x: x[1])[0]
-                else:
-                    return max(values, key=lambda x: x[1])[1]
+                return max(values, key=lambda x: x[2])[2]
             else:
-                if deep == 0:
-                    return min(values, key=lambda x: x[1])[0]
-                else:
-                    return min(values, key=lambda x: x[1])[1]
-
-
-
-
+                return min(values, key=lambda x: x[2])[2]
 
     def GiveValue(self):
         return random.uniform(-1, 1)
