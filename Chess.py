@@ -619,7 +619,7 @@ class Chess:
                 # castling
                 if move in ['g1', 'c1', 'g8', 'c8']:
                     rook = 'R' if self.white_plays else 'r'
-                    rank_index = self.NUMBER_TO_INDEX[ord(rank) - ord('0')]
+                    rank_index = self.NUMBER_TO_INDEX[rank]
                     self.board[rank_index][self.LETTER_TO_INDEX[file]] = None
                     self.board[rank_index][self.LETTER_TO_INDEX[move[0]]] = king
                     if move[0] == 'g':
