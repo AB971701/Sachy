@@ -195,7 +195,8 @@ class ChessGUI:
                                                 450,
                                                 text="Game finished",
                                                 font=('Arial', 50),
-                                                fill='red')
+                                                fill='red',
+                                                tag='fin')
 
     def ChangeColor(self, color1, color2):
         """
@@ -215,6 +216,8 @@ class ChessGUI:
         Creates a new game
         :return:
         """
+        if self.chess.check_checkmate():
+            self.canvas.delete('fin')
         #create new game
         self.chess = Chess()
         self.AfterMove()
@@ -224,6 +227,8 @@ class ChessGUI:
         Loads another game.
         :return:
         """
+        if self.chess.check_checkmate():
+            self.canvas.delete('fin')
         try:
             self.chess = Chess(self.text.get() + ".txt")
             self.AfterMove()
