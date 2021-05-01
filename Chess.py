@@ -352,7 +352,7 @@ class Chess:
                     possible_moves.append(file + str(rank - 1))
 
                 # pesak se jeste nepohnul
-                if rank == 7 and self.board[self.NUMBER_TO_INDEX[5]][file_num] is None and \
+                if rank == 7 and self.board[self.NUMBER_TO_INDEX[6]][file_num] is None and \
                         self.board[self.NUMBER_TO_INDEX[5]][file_num] is None:
                     possible_moves.append(file + str(5))
 
@@ -395,7 +395,7 @@ class Chess:
                     break
                 possible_moves.append(file + str(r))
             # -nahoru
-            for r in range(rank + 1, 8):
+            for r in range(rank + 1, 9):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(file, r)
                 if p is not None:
@@ -414,7 +414,7 @@ class Chess:
                     break
                 possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
             # -doprava
-            for f in range(file_num + 1, 8):
+            for f in range(file_num + 1, 9):
                 # nemuze za obsazene pole (a na obsazene pole v pripade vlastni figurky)
                 p = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank)
                 if p is not None:
@@ -615,19 +615,31 @@ class Chess:
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
+                print(move, ':')
                 board = deepcopy(self.board)
                 # castling
-                if move in ['g1', 'c1', 'g8', 'c8']:
-                    rook = 'R' if self.white_plays else 'r'
-                    rank_index = self.NUMBER_TO_INDEX[rank]
-                    self.board[rank_index][self.LETTER_TO_INDEX[file]] = None
-                    self.board[rank_index][self.LETTER_TO_INDEX[move[0]]] = king
-                    if move[0] == 'g':
-                        self.board[rank_index][self.LETTER_TO_INDEX['h']] = None
-                        self.board[rank_index][self.LETTER_TO_INDEX['f']] = rook
-                    else:
-                        self.board[rank_index][self.LETTER_TO_INDEX['a']] = None
-                        self.board[rank_index][self.LETTER_TO_INDEX['d']] = rook
+                if self.white_plays:
+                    if 'K' in self.castling_rights and move == 'g1':
+                        board[-1][self.LETTER_TO_INDEX[file]] = None
+                        board[-1][self.LETTER_TO_INDEX['g']] = 'K'
+                        board[-1][self.LETTER_TO_INDEX['h']] = None
+                        board[-1][self.LETTER_TO_INDEX['f']] = 'R'
+                    elif 'Q' in self.castling_rights and move == 'c1':
+                        board[-1][self.LETTER_TO_INDEX[file]] = None
+                        board[-1][self.LETTER_TO_INDEX['c']] = 'K'
+                        board[-1][self.LETTER_TO_INDEX['a']] = None
+                        board[-1][self.LETTER_TO_INDEX['d']] = 'R'
+                else:
+                    if 'k' in self.castling_rights and move == 'g8':
+                        board[0][self.LETTER_TO_INDEX[file]] = None
+                        board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                        board[0][self.LETTER_TO_INDEX['h']] = None
+                        board[0][self.LETTER_TO_INDEX['f']] = 'r'
+                    if 'q' in self.castling_rights and move == 'c8':
+                        board[0][self.LETTER_TO_INDEX[file]] = None
+                        board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                        board[0][self.LETTER_TO_INDEX['a']] = None
+                        board[0][self.LETTER_TO_INDEX['d']] = 'r'
                 # other moves
                 board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
                 board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
@@ -635,6 +647,7 @@ class Chess:
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
+
         return possible_moves
 
     def get_moves(self, file, rank):
@@ -665,13 +678,13 @@ class Chess:
         else:
             return []
 
-    def king_in_check(self, **kwargs):
+    def king_in_check_pos(self, **kwargs):
         """
         function to get all places from which is king put in a check
-        :param board: chessboard
+        :param kwargs: board = chessboard
         :return: list of all coordinates from which is king put in a check
         """
-        board=self.board
+        board = self.board
         if 'board' in kwargs:
             board = kwargs['board']
         king = 'K' if self.white_plays else 'k'
@@ -849,6 +862,189 @@ class Chess:
                         checks.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 1))
 
         return checks
+
+    def king_in_check(self, **kwargs):
+        """
+        function to determine if king is in check
+        :param kwargs:
+        :return: True if king is in check, else False
+        """
+        board=self.board
+        if 'board' in kwargs:
+            board = kwargs['board']
+        king = 'K' if self.white_plays else 'k'
+        row = [row for row in board if king in row][0]
+        print(board)
+        print(row, board.index(row))
+        rank = self.INDEX_TO_NUMBER[board.index(row)]
+        file_num = row.index(king)
+
+        # checks for checks from rooks and queen
+        # horizontal direction
+        # -to the left
+        for f in range(file_num - 1, 0, -1):
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'rq':
+                    return True
+        # -to the right
+        for f in range(file_num + 1, 8):
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'rq':
+                    return True
+
+        # vertical direction
+        # -down
+        for r in range(rank - 1, 0, -1):
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], r, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'rq':
+                    return True
+        # -up
+        for r in range(rank + 1, 9):
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], r, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'rq':
+                    return True
+
+        # checks for checks from bishops and queen
+        # from left to right
+        i = 1
+        # -up
+        while (file_num - i) >= 0 and (rank - i) > 0:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank - i, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'bq':
+                    return True
+            i += 1
+        i = 1
+        # -down
+        while (file_num + i) < 8 and (rank + i) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank + i, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'bq':
+                    return True
+            i += 1
+
+        # from right to left
+        i = 1
+        # -down
+        while (file_num + i) < 8 and (rank - i) > 0:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + i], rank - i, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'bq':
+                    return True
+            i += 1
+        i = 1
+        # -up
+        while (file_num - i) >= 0 and (rank + i) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - i], rank + i, board)
+            if self.__is_own_piece(piece):
+                break
+            elif piece is not None:
+                if piece.lower() in 'bq':
+                    return True
+            i += 1
+
+        # checks for checks from knights
+        # - 2x doleva, 1x dolu
+        if 0 <= (file_num - 2) <= 7 and 0 < (rank - 1) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank - 1, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 1x doleva, 2x dolu
+        if 0 <= (file_num - 1) <= 7 and 0 < (rank - 2) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 2, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 1x doprava, 2x dolu
+        if 0 <= (file_num + 1) <= 7 and 0 < (rank - 2) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 2, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 2x doprava, 1x dolu
+        if 0 <= (file_num + 2) <= 7 and 0 < (rank - 1) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank - 1, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 2x doprava, 1x nahoru
+        if 0 <= (file_num + 2) <= 7 and 0 < (rank + 1) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 2], rank + 1, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 1x doprava, 2x nahoru
+        if 0 <= (file_num + 1) <= 7 and 0 < (rank + 2) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 2, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 1x doleva, 2x nahoru
+        if 0 <= (file_num - 1) <= 7 and 0 < (rank + 2) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 2, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+        # - 2x doleva, 1x nahoru
+        if 0 <= (file_num - 2) <= 7 and 0 < (rank + 1) <= 8:
+            piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 2], rank + 1, board)
+            if (piece is not None) and (not self.__is_own_piece(piece)):
+                if piece.lower() == 'n':
+                    return True
+
+        # checks for checks from pawns
+        if not self.white_plays:
+            # bottom left
+            if 0 <= (file_num - 1) <= 7 and 0 < (rank - 1) <= 8:
+                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1, board)
+                if (piece is not None) and (not self.__is_own_piece(piece)):
+                    if piece == 'P':
+                        return True
+            # bottom right
+            if 0 <= (file_num + 1) <= 7 and 0 < (rank - 1) <= 8:
+                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1, board)
+                if (piece is not None) and (not self.__is_own_piece(piece)):
+                    if piece == 'P':
+                        return True
+        else:
+            # top left
+            print(file_num, rank)
+            print(0 <= (file_num - 1) <= 7, 0 < (rank + 1) <= 8, 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8)
+            if 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8:
+                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1, board)
+                #if (piece is not None) and (not self.__is_own_piece(piece)):
+                print(piece, piece == 'p')
+                if piece == 'p':
+                    return True
+            # top right
+            print(0 <= (file_num + 1) <= 7, 0 < (rank + 1) <= 8, 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8)
+            if 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8:
+                piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1, board)
+                #if (piece is not None) and (not self.__is_own_piece(piece)):
+                print(piece, piece == 'p')
+                if piece == 'p':
+                    return True
+
+        return False
 
     """ Print board """
 
