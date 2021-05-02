@@ -181,9 +181,14 @@ class Chess:
                 raise PromotePawnException
             if to_history: self.__add_move_to_history()
 
+            # checkmate
             if self.check_checkmate():
                 self.game_over = True
             self.white_plays = not self.white_plays
+
+            # stalemate
+            if self.check_stalemate():
+                self.game_over = True
 
             return True
         return False
@@ -206,16 +211,7 @@ class Chess:
                         self.__find_piece_on_coords(start_position[0], ord(start_position[1]) - ord('0'))):
                     # kontroluje jestli je tah pro figurku podle pravidel sachu legalni
                     if self.__move_legal(start_position, end_position):
-                        board = deepcopy(self.board)
-                        start_row = self.NUMBER_TO_INDEX[ord(start_position[1]) - ord('0')]
-                        start_col = self.LETTER_TO_INDEX[start_position[0]]
-                        end_row = self.NUMBER_TO_INDEX[ord(end_position[1]) - ord('0')]
-                        end_col = self.LETTER_TO_INDEX[end_position[0]]
-                        tmp = board[start_row][start_col]
-                        board[start_row][start_col] = None
-                        board[end_row][end_col] = tmp
-                        if not self.king_in_check(board=board):
-                            return True
+                        return True
         return False
 
     def __coord_valid(self, coord):
@@ -237,7 +233,8 @@ class Chess:
         """
         file = start_position[0]
         rank = ord(start_position[1]) - ord('0')
-        if end_position in self.get_moves(file, rank):
+        valid_moves = self.get_moves(file, rank)
+        if end_position in valid_moves:
             return True
         return False
 
@@ -689,7 +686,6 @@ class Chess:
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
-                #print(move, ':')
                 board = deepcopy(self.board)
                 # castling
                 if self.white_plays:
@@ -1201,7 +1197,6 @@ class Chess:
 
     def check_checkmate(self):
         if self.king_in_check():
-            checkmate = True
             king = 'K' if self.white_plays else 'k'
             row = [row for row in self.board if king in row][0]
             king_row = self.board.index(row)
@@ -1215,6 +1210,18 @@ class Chess:
                     return False
             return True
         return False
+
+    def check_stalemate(self):
+        """
+        checks if game ended in stalemate
+        :return: True if game ended with stalemate, else False
+        """
+        for row in self.board:
+            for field in row:
+                if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+                    return False
+        return True
+
 
     # TODO: stalemate
 
