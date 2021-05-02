@@ -72,7 +72,7 @@ class ChessGUI:
             if event.x >= 50 and event.x <= self.size - 50 and event.y >= 50 and event.y <= self.size - 50:
                 # mouse click funtion
                 piece = self.chess.board[int((event.y - 50) / ((self.size - 100) / 8))][int((event.x - 50) / ((self.size - 100) / 8))]
-                if piece != None:
+                if piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                     self.ChangeColor('pale goldenrod', 'dark olive green')
                     self.possible_moves_gui.clear()
                     self.possible_moves = self.chess.get_moves(
@@ -93,7 +93,7 @@ class ChessGUI:
                             self.possible_moves_gui.clear()
                             self.possible_moves.clear()
                             self.last_click = None
-                        elif piece != None:
+                        elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                             self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
@@ -103,7 +103,7 @@ class ChessGUI:
                         self.possible_moves_gui.clear()
                         self.possible_moves.clear()
                         self.last_click = None
-                elif piece != None:
+                elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                     self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
 
