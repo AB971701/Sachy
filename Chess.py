@@ -16,12 +16,13 @@ class Chess:
     def __init__(self, filepath=None):
         if filepath is not None:
             with open(filepath, 'r') as f:
-                self.board_history = [moves for moves in f]
+                lines = (line.strip() for line in f)
+                self.board_history = list(line for line in lines if line)  # ignores blank lines
             current = self.board_history[-1]
             current = current.strip()
             pF = current.find(' ') + 1
             self.white_plays = True if current[pF:pF + 1] == 'w' else False
-            pF += 3
+            pF = current.find(' ', pF + 1) + 1
             pL = current.find(' ', pF)
             self.castling_rights = current[pF:pL]
             pF = pL + 1
@@ -74,10 +75,11 @@ class Chess:
         """
         with open(filepath, "w") as file:
             for move in self.board_history:
-                file.write("%s\n" % move)
+                file.write("%s" % move)
 
     """ Move execution """
 
+    # TODO: na 8. rank muze kral jenom sikmo, kral nemuze brat figurky kdyz je v sachu
     def move(self, start_position, end_position, to_history=True):
         """
         function performs a move
@@ -95,27 +97,26 @@ class Chess:
             if to_history: halfmove_reset = False
 
             tmp = self.board[start_row][start_col]
-
             # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
             # tah - rosada
             if tmp in 'kK':
-                king_moves = self.get_king_moves(start_position[0], ord(start_position[1]) - ord('0'))
-                if tmp == 'K' and 'K' in self.castling_rights and 'g1' in king_moves:
+                king_moves = self.get_king_moves(start_position[0], int(start_position[1]))
+                if (tmp == 'K') and ('K' in self.castling_rights) and ('g1' in king_moves):
                     self.board[7][self.LETTER_TO_INDEX['h']] = None  # rook
                     self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
-                elif tmp == 'K' and 'Q' in self.castling_rights and 'c1' in king_moves:
+                elif (tmp == 'K') and ('Q' in self.castling_rights) and ('c1' in king_moves):
                     self.board[7][self.LETTER_TO_INDEX['a']] = None  # rook
                     self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
-                elif tmp == 'k' and 'k' in self.castling_rights and 'g8' in king_moves:
+                elif (tmp == 'k') and ('k' in self.castling_rights) and ('g8' in king_moves):
                     self.board[0][self.LETTER_TO_INDEX['h']] = None  # rook
                     self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
                     self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
-                elif tmp == 'k' and 'q' in self.castling_rights and 'c8' in king_moves:
+                elif (tmp == 'k') and ('q' in self.castling_rights) and ('c8' in king_moves):
                     self.board[0][self.LETTER_TO_INDEX['a']] = None  # rook
                     self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
@@ -134,6 +135,18 @@ class Chess:
             # tah - ostatni
             else:
                 self.board[start_row][start_col] = None
+                end_piece = self.board[end_row][end_col]
+                if end_piece is not None:
+                    if end_piece == 'r':
+                        if end_position == 'a8':
+                            self.castling_rights = self.castling_rights.replace('q', '')
+                        elif end_position == 'h8':
+                            self.castling_rights = self.castling_rights.replace('k', '')
+                    elif end_piece == 'r':
+                        if end_position == 'a1':
+                            self.castling_rights = self.castling_rights.replace('Q', '')
+                        elif end_position == 'h1':
+                            self.castling_rights = self.castling_rights.replace('K', '')
                 self.board[end_row][end_col] = tmp
 
             # TOHLE UZ NENI TAH
@@ -179,16 +192,17 @@ class Chess:
             if (self.white_plays and tmp == 'P' and end_row == 0) or (
                     not self.white_plays and tmp == 'p' and end_row == 7):
                 raise PromotePawnException
-            if to_history: self.__add_move_to_history()
 
             # checkmate
             if self.check_checkmate():
                 self.game_over = True
-            self.white_plays = not self.white_plays
 
             # stalemate
             if self.check_stalemate():
                 self.game_over = True
+
+            if to_history: self.__add_move_to_history()
+            self.white_plays = not self.white_plays
 
             return True
         return False
@@ -208,7 +222,7 @@ class Chess:
             if self.__coord_valid(start_position) and self.__coord_valid(end_position):
                 # kontroluje jestli je na danych pcatecnich souradnicich vlastni figurka
                 if self.__is_own_piece(
-                        self.__find_piece_on_coords(start_position[0], ord(start_position[1]) - ord('0'))):
+                        self.__find_piece_on_coords(start_position[0], int(start_position[1]))):
                     # kontroluje jestli je tah pro figurku podle pravidel sachu legalni
                     if self.__move_legal(start_position, end_position):
                         return True
@@ -331,25 +345,24 @@ class Chess:
                         (ord(file) == ord(self.en_passant[0]) + 1) or (ord(file) == ord(self.en_passant[0]) - 1)):
                     possible_moves.append(self.en_passant)
 
-                # kral v sachu
-                if self.king_in_check():
-                    delete_moves = []
-                    for move in possible_moves:
-                        board = deepcopy(self.board)
-                        # brani mimochodem
-                        if move == self.en_passant:
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                            board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'P'
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[move[0]]] = None
-                        # normalni tah
-                        else:
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                            board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'P'
+                # kral v sachu po moznem tahu
+                delete_moves = []
+                for move in possible_moves:
+                    board = deepcopy(self.board)
+                    # brani mimochodem
+                    if move == self.en_passant:
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                        board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'P'
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[move[0]]] = None
+                    # normalni tah
+                    else:
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                        board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'P'
 
-                        if self.king_in_check(board):
-                            delete_moves.append(move)
-                    for move in delete_moves:
-                        possible_moves.remove(move)
+                    if self.king_in_check(board):
+                        delete_moves.append(move)
+                for move in delete_moves:
+                    possible_moves.remove(move)
 
 
             # cerny je na tahu
@@ -380,24 +393,23 @@ class Chess:
                     possible_moves.append(self.en_passant)
 
                 # kral v sachu
-                if self.king_in_check():
-                    delete_moves = []
-                    for move in possible_moves:
-                        board = deepcopy(self.board)
-                        # brani mimochodem
-                        if move == self.en_passant:
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                            board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[move[0]]] = None
-                        # normalni tah
-                        else:
-                            board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                            board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+                delete_moves = []
+                for move in possible_moves:
+                    board = deepcopy(self.board)
+                    # brani mimochodem
+                    if move == self.en_passant:
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                        board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[move[0]]] = None
+                    # normalni tah
+                    else:
+                        board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                        board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
 
-                        if self.king_in_check(board):
-                            delete_moves.append(move)
-                    for move in delete_moves:
-                        possible_moves.remove(move)
+                    if self.king_in_check(board):
+                        delete_moves.append(move)
+                for move in delete_moves:
+                    possible_moves.remove(move)
 
         return possible_moves
 
@@ -451,18 +463,17 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[f] + str(rank))
 
             # kral v sachu
-            if self.king_in_check():
-                delete_moves = []
-                for move in possible_moves:
-                    board = deepcopy(self.board)
-                    # normalni tah
-                    board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                    board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+            delete_moves = []
+            for move in possible_moves:
+                board = deepcopy(self.board)
+                # normalni tah
+                board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
 
-                    if self.king_in_check(board):
-                        delete_moves.append(move)
-                for move in delete_moves:
-                    possible_moves.remove(move)
+                if self.king_in_check(board):
+                    delete_moves.append(move)
+            for move in delete_moves:
+                possible_moves.remove(move)
 
         return possible_moves
 
@@ -511,18 +522,17 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[file_num - 2] + str(rank + 1))
 
             # kral v sachu
-            if self.king_in_check():
-                delete_moves = []
-                for move in possible_moves:
-                    board = deepcopy(self.board)
-                    # normalni tah
-                    board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                    board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+            delete_moves = []
+            for move in possible_moves:
+                board = deepcopy(self.board)
+                # normalni tah
+                board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
 
-                    if self.king_in_check(board):
-                        delete_moves.append(move)
-                for move in delete_moves:
-                    possible_moves.remove(move)
+                if self.king_in_check(board):
+                    delete_moves.append(move)
+            for move in delete_moves:
+                possible_moves.remove(move)
         return possible_moves
 
     def get_bishop_moves(self, file, rank):
@@ -580,20 +590,18 @@ class Chess:
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank + i))
                 i += 1
 
-
             # kral v sachu
-            if self.king_in_check():
-                delete_moves = []
-                for move in possible_moves:
-                    board = deepcopy(self.board)
-                    # normalni tah
-                    board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                    board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+            delete_moves = []
+            for move in possible_moves:
+                board = deepcopy(self.board)
+                # normalni tah
+                board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
 
-                    if self.king_in_check(board):
-                        delete_moves.append(move)
-                for move in delete_moves:
-                    possible_moves.remove(move)
+                if self.king_in_check(board):
+                    delete_moves.append(move)
+            for move in delete_moves:
+                possible_moves.remove(move)
         return possible_moves
 
     def get_queen_moves(self, file, rank):
@@ -639,7 +647,7 @@ class Chess:
                 if not self.__is_own_piece(piece):
                     possible_moves.append(self.INDEX_TO_LETTER[file_num + 1] + str(rank + 1))
             # nahoru
-            if 0 <= (rank + 1) <= 7:
+            if 0 <= (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank + 1)
                 if not self.__is_own_piece(piece):
                     possible_moves.append(file + str(rank + 1))
@@ -681,38 +689,40 @@ class Chess:
                         self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
 
-
             # find and delete moves that would lead to check
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
                 board = deepcopy(self.board)
                 # castling
-                if self.white_plays:
-                    if 'K' in self.castling_rights and move == 'g1':
-                        board[-1][self.LETTER_TO_INDEX[file]] = None
-                        board[-1][self.LETTER_TO_INDEX['g']] = 'K'
-                        board[-1][self.LETTER_TO_INDEX['h']] = None
-                        board[-1][self.LETTER_TO_INDEX['f']] = 'R'
-                    elif 'Q' in self.castling_rights and move == 'c1':
-                        board[-1][self.LETTER_TO_INDEX[file]] = None
-                        board[-1][self.LETTER_TO_INDEX['c']] = 'K'
-                        board[-1][self.LETTER_TO_INDEX['a']] = None
-                        board[-1][self.LETTER_TO_INDEX['d']] = 'R'
-                else:
-                    if 'k' in self.castling_rights and move == 'g8':
-                        board[0][self.LETTER_TO_INDEX[file]] = None
-                        board[0][self.LETTER_TO_INDEX['g']] = 'k'
-                        board[0][self.LETTER_TO_INDEX['h']] = None
-                        board[0][self.LETTER_TO_INDEX['f']] = 'r'
-                    if 'q' in self.castling_rights and move == 'c8':
-                        board[0][self.LETTER_TO_INDEX[file]] = None
-                        board[0][self.LETTER_TO_INDEX['c']] = 'k'
-                        board[0][self.LETTER_TO_INDEX['a']] = None
-                        board[0][self.LETTER_TO_INDEX['d']] = 'r'
+                if self.castling_rights != '-':
+                    if self.white_plays:
+                        if 'K' in self.castling_rights and move == 'g1':
+                            board[-1][self.LETTER_TO_INDEX[file]] = None
+                            board[-1][self.LETTER_TO_INDEX['g']] = 'K'
+                            board[-1][self.LETTER_TO_INDEX['h']] = None
+                            board[-1][self.LETTER_TO_INDEX['f']] = 'R'
+                        elif 'Q' in self.castling_rights and move == 'c1':
+                            board[-1][self.LETTER_TO_INDEX[file]] = None
+                            board[-1][self.LETTER_TO_INDEX['c']] = 'K'
+                            board[-1][self.LETTER_TO_INDEX['a']] = None
+                            board[-1][self.LETTER_TO_INDEX['d']] = 'R'
+                    else:
+                        if 'k' in self.castling_rights and move == 'g8':
+                            board[0][self.LETTER_TO_INDEX[file]] = None
+                            board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                            board[0][self.LETTER_TO_INDEX['h']] = None
+                            board[0][self.LETTER_TO_INDEX['f']] = 'r'
+                        if 'q' in self.castling_rights and move == 'c8':
+                            board[0][self.LETTER_TO_INDEX[file]] = None
+                            board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                            board[0][self.LETTER_TO_INDEX['a']] = None
+                            board[0][self.LETTER_TO_INDEX['d']] = 'r'
                 # other moves
-                board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
-                board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+                else:
+                    board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
+                    board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
+
                 if self.king_in_check(board=board):
                     delete_moves.append(move)
             for move in delete_moves:
@@ -1182,7 +1192,7 @@ class Chess:
             fen += '/'
         fen = fen[:-1]
         fen += ' '
-        fen += 'w' if self.white_plays else 'b'
+        fen += 'b' if self.white_plays else 'w'
         fen += ' '
         fen += self.castling_rights
         fen += ' '
@@ -1218,7 +1228,8 @@ class Chess:
         """
         for row in self.board:
             for field in row:
-                if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+                if field is not None and self.__is_own_piece(field) and self.get_moves(
+                        self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
                     return False
         return True
 
