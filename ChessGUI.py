@@ -211,9 +211,9 @@ class ChessGUI:
             for i in range(8):
                 for k in range(8):
                     self.__previous_board[i][k] = self.chess.board[i][k]
-                    if self.chess.check_checkmate():
-                        self.canvas.create_text(450,
-                                                450,
+                    if self.chess.game_over:
+                        self.canvas.create_text(self.size // 2,
+                                                self.size // 2,
                                                 text="Game finished",
                                                 font=('Arial', 50),
                                                 fill='red',
@@ -237,7 +237,7 @@ class ChessGUI:
         Creates a new game
         :return:
         """
-        if self.chess.check_checkmate():
+        if self.chess.game_over:
             self.canvas.delete('fin')
         #create new game
         self.chess = Chess()
@@ -251,7 +251,7 @@ class ChessGUI:
         Loads another game.
         :return:
         """
-        if self.chess.check_checkmate():
+        if self.chess.game_over:
             self.canvas.delete('fin')
         try:
             self.chess = Chess(self.text.get() + ".txt")
