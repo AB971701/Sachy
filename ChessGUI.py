@@ -160,9 +160,13 @@ class ChessGUI:
             for square in range(len(board[line])):
                 if board[line][square] in self.choices:
                     piece = tk.PhotoImage(file=self.choices.get(board[line][square]))
-                    piece = piece.subsample(int(((self.size - 100) / piece.width() / 8)), int(((self.size - 100) / piece.width() / 8)))
+                    if (self.size - 100) // 8 < 100:
+                        piece = piece.subsample(int(1 / ((self.size - 100) / 8) / piece.width()), int(1 / ((self.size - 100) / 8) / piece.width()))
+                    else:
+                        piece = piece.zoom(int(((self.size - 100) / 8) / piece.width()),
+                                                int(((self.size - 100) / 8) / piece.width()))
                     pieces.append(piece)
-                    canvas.create_image(50 + int(((self.size - 100) / 8 - piece.width()) / 2) + square * int((self.size - 100) / 8), 50 + int(((self.size - 100) / 8 - piece.width()) / 2) + line * int((self.size - 100) / 8), anchor='nw', image=piece)
+                    canvas.create_image(50 + ((self.size - 100) // 8 - piece.width()) // 2 + square * int((self.size - 100) / 8), 50 + ((self.size - 100) // 8 - piece.width()) // 2 + line * int((self.size - 100) / 8), anchor='nw', image=piece)
                 else:
                     pieces.append(None)
         return pieces
@@ -183,17 +187,27 @@ class ChessGUI:
                                 self.pieces[line * 8 + square] = None
                             else:
                                 self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
-                                    int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)),
-                                    int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)))
-                                self.canvas.create_image(50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + square * int((self.size - 100) / 8),
-                                                         50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + line * int((self.size - 100) / 8),
+                                if (self.size - 100) // 8 < 100:
+                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
+                                        int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
+                                        int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                                else:
+                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
+                                        int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
+                                        int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                                self.canvas.create_image(50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + square * int((self.size - 100) / 8),
+                                                         50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + line * int((self.size - 100) / 8),
                                                          anchor='nw', image=self.pieces[line * 8 + square])
                         else:
                             self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                            self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
-                                int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)),
-                                int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)))
+                            if (self.size - 100) // 8 < 100:
+                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
+                                    int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
+                                    int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                            else:
+                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
+                                    int(((self.size - 100) / 8) // self.pieces[line * 8 + square].width()),
+                                    int(((self.size - 100) / 8) // self.pieces[line * 8 + square].width()))
                             self.canvas.create_image(50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + square * int((self.size - 100) / 8),
                                                      50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + line * int((self.size - 100) / 8),
                                                      anchor='nw', image=self.pieces[line * 8 + square])
