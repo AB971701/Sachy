@@ -203,7 +203,6 @@ class Chess:
 
             if to_history: self.__add_move_to_history()
             self.white_plays = not self.white_plays
-            print(self.game_over)
             return True
         return False
 
@@ -689,14 +688,12 @@ class Chess:
                         self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
 
-            print(possible_moves)
             # find and delete moves that would lead to check
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
                 board = deepcopy(self.board)
                 # castling
-                print(self.castling_rights)
                 if self.white_plays and 'K' in self.castling_rights and move == 'g1':
                     board[-1][self.LETTER_TO_INDEX[file]] = None
                     board[-1][self.LETTER_TO_INDEX['g']] = 'K'
@@ -723,7 +720,6 @@ class Chess:
                     board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
 
                 if self.king_in_check(board=board):
-                    print(move)
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
