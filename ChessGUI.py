@@ -62,41 +62,42 @@ class ChessGUI:
         :param event: mouse click
         :return:
         """
-        # last click is the previous click
-        if event.x >= 50 and event.x <= 850 and event.y >= 50 and event.y <= 850:
-            # mouse click funtion
-            piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
-            self.ChangeColor('pale goldenrod', 'dark olive green')
-            self.possible_moves_gui.clear()
-            self.possible_moves = self.chess.get_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                          self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-            for move in self.possible_moves:
-                self.possible_moves_gui.append(self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
-            self.ChangeColor('seashell3', 'seashell4')
-            if self.last_click != None:
-                try:
-                    if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
-                        if self.against_player is False:
-                            self.mimax.minmax()
+        if self.canvas.cget('state') != 'disabled':
+            # last click is the previous click
+            if event.x >= 50 and event.x <= 850 and event.y >= 50 and event.y <= 850:
+                # mouse click funtion
+                piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
+                self.ChangeColor('pale goldenrod', 'dark olive green')
+                self.possible_moves_gui.clear()
+                self.possible_moves = self.chess.get_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
+                                                              self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                for move in self.possible_moves:
+                    self.possible_moves_gui.append(self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
+                self.ChangeColor('seashell3', 'seashell4')
+                if self.last_click != None:
+                    try:
+                        if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
+                            if self.against_player is False:
+                                self.mimax.minmax()
+                            self.AfterMove()
+                            self.ChangeColor('pale goldenrod', 'dark olive green')
+                            self.possible_moves_gui.clear()
+                            self.possible_moves.clear()
+                            self.last_click = None
+                        elif piece != None:
+                            self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                    except PromotePawnException:
+                        self.Promotion()
                         self.AfterMove()
                         self.ChangeColor('pale goldenrod', 'dark olive green')
                         self.possible_moves_gui.clear()
                         self.possible_moves.clear()
                         self.last_click = None
-                    elif piece != None:
-                        self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                            self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                except PromotePawnException:
-                    self.Promotion()
-                    self.AfterMove()
-                    self.ChangeColor('pale goldenrod', 'dark olive green')
-                    self.possible_moves_gui.clear()
-                    self.possible_moves.clear()
-                    self.last_click = None
-            elif piece != None:
-                self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                    self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                elif piece != None:
+                    self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
+                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
 
     def __CreateBoard(self, canvas):
         """
@@ -104,6 +105,7 @@ class ChessGUI:
         :param canvas: canvas
         :return:
         """
+        self.canvas.focus_set()
         squares = []
         #creates the board
         for i in range(8):
@@ -224,7 +226,7 @@ class ChessGUI:
             self.chess = Chess(self.text.get() + ".txt")
             self.AfterMove()
             self.main.destroy()
-            self.main.update()
+            self.canvas.focus_set()
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
 
@@ -235,8 +237,10 @@ class ChessGUI:
         """
         self.main = tk.Toplevel(self.root)
         self.text = tk.StringVar()
-        tk.Entry(self.main, textvariable=self.text).grid(column=0, row=0)
+        self.name = tk.Entry(self.main, textvariable=self.text)
+        self.name.grid(column=0, row=0)
         tk.Button(self.main, text="Enter", command=self.__load).grid(column=0, row=1)
+        self.name.focus_set()
 
     def __save(self):
         """
@@ -245,6 +249,7 @@ class ChessGUI:
         """
         self.chess.save_to_file(self.text.get() + ".txt")
         self.main.destroy()
+        self.canvas.focus_set()
 
     def __GetFilepathS(self):
         """
@@ -253,8 +258,10 @@ class ChessGUI:
         """
         self.main = tk.Toplevel(self.root)
         self.text = tk.StringVar()
-        tk.Entry(self.main, textvariable=self.text).grid(column=0, row=0)
+        self.name = tk.Entry(self.main, textvariable=self.text)
+        self.name.grid(column=0, row=0)
         tk.Button(self.main, text="Enter", command=self.__save).grid(column=0, row=1)
+        self.name.focus_set()
 
     def Promotion(self):
         """
@@ -263,15 +270,25 @@ class ChessGUI:
         """
         self.promo = tk.Toplevel(self.root)
         if self.chess.white_plays:
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['q']), command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['r']), command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['b']), command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['n']), command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+            self.promotion_q = tk.PhotoImage(file=self.choices['q'])
+            tk.Button(self.promo, image=self.promotion_q, command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            self.promotion_r = tk.PhotoImage(file=self.choices['r'])
+            tk.Button(self.promo, image=self.promotion_r, command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            self.promotion_b = tk.PhotoImage(file=self.choices['b'])
+            tk.Button(self.promo, image=self.promotion_b, command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            self.promotion_n = tk.PhotoImage(file=self.choices['n'])
+            tk.Button(self.promo, image=self.promotion_n, command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
         else:
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['Q']), command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['R']), command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['B']), command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
-            tk.Button(self.promo, image=tk.PhotoImage(file=self.choices['N']), command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+            self.promotion_Q = tk.PhotoImage(file=self.choices['Q'])
+            tk.Button(self.promo, image=self.promotion_Q, command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            self.promotion_R = tk.PhotoImage(file=self.choices['R'])
+            tk.Button(self.promo, image=self.promotion_R, command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            self.promotion_B = tk.PhotoImage(file=self.choices['B'])
+            tk.Button(self.promo, image=self.promotion_B, command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            self.promotion_N = tk.PhotoImage(file=self.choices['N'])
+            tk.Button(self.promo, image=self.promotion_N, command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+        self.canvas.configure(state='disabled', takefocus=0)
+        self.promo.focus_set()
         pass
 
     def OnButtonClick(self, button_id):
@@ -293,6 +310,8 @@ class ChessGUI:
             self.chess.promote_pawn('n')
         self.AfterMove()
         self.promo.destroy()
+        self.canvas.configure(state='normal')
+        self.canvas.focus_set()
 
     def AiVSP(self):
         self.against_player = not self.against_player
