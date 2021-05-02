@@ -78,11 +78,12 @@ class Chess:
 
     """ Move execution """
 
-    def move(self, start_position, end_position):
+    def move(self, start_position, end_position, to_history=True):
         """
         function performs a move
         :param start_position: position where is the piece standing before the move
         :param end_position: position to which is the piece moved
+        :param to_history: True if the move should be added to history, else False
         :return: True if move was valid and it was made, else False
         """
         if self.__is_valid(start_position, end_position):
@@ -91,7 +92,7 @@ class Chess:
             end_row = self.NUMBER_TO_INDEX[ord(end_position[1]) - ord('0')]
             end_col = self.LETTER_TO_INDEX[end_position[0]]
 
-            halfmove_reset = False
+            if to_history: halfmove_reset = False
 
             tmp = self.board[start_row][start_col]
 
@@ -143,7 +144,7 @@ class Chess:
                     self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row - 1])
                 elif not self.white_plays and start_row == 1 and end_row == 3:
                     self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row + 1])
-                halfmove_reset = True  # pawn advance - 50 move rule
+                if to_history: halfmove_reset = True  # pawn advance - 50 move rule
             # rosada
             elif tmp in 'kK':
                 if tmp == 'k':
@@ -164,122 +165,25 @@ class Chess:
                     elif start_position == 'h1':
                         self.castling_rights = self.castling_rights.replace('K', '')
 
-                if self.board[end_row][end_col] is not None:
+                if to_history and self.board[end_row][end_col] is not None:
                     halfmove_reset = True
-
-            if halfmove_reset:
-                self.half_move = 0
-            else:
-                self.half_move += 1
-            if not self.white_plays:
-                self.full_move += 1
-            if self.check_checkmate():
-                self.game_over = True
-            self.white_plays = not self.white_plays
+            if to_history:
+                if halfmove_reset:
+                    self.half_move = 0
+                else:
+                    self.half_move += 1
+                if not self.white_plays:
+                    self.full_move += 1
 
             # check in pawn is at the end
-            if (not self.white_plays and tmp == 'P' and end_row == 0) or (self.white_plays and tmp == 'p' and end_row == 7):
-                self.__add_move_to_history()
+            if (self.white_plays and tmp == 'P' and end_row == 0) or (
+                    not self.white_plays and tmp == 'p' and end_row == 7):
                 raise PromotePawnException
-            self.__add_move_to_history()
-
-            return True
-        return False
-
-    def moveai(self, start_position, end_position):
-        """
-        function performs a move
-        :param start_position: position where is the piece standing before the move
-        :param end_position: position to which is the piece moved
-        :return: True if move was valid and it was made, else False
-        """
-        if self.__is_valid(start_position, end_position):
-            start_row = self.NUMBER_TO_INDEX[ord(start_position[1]) - ord('0')]
-            start_col = self.LETTER_TO_INDEX[start_position[0]]
-            end_row = self.NUMBER_TO_INDEX[ord(end_position[1]) - ord('0')]
-            end_col = self.LETTER_TO_INDEX[end_position[0]]
-
-            halfmove_reset = False
-
-            tmp = self.board[start_row][start_col]
-
-            # "pohne" figurkou - na puvodni pozici ulozi None, novou pozici prepise nazvem figurky se kterou se hralo
-            # tah - rosada
-            if tmp in 'kK':
-                king_moves = self.get_king_moves(start_position[0], ord(start_position[1]) - ord('0'))
-                if tmp == 'K' and 'K' in self.castling_rights and 'g1' in king_moves:
-                    self.board[7][self.LETTER_TO_INDEX['h']] = None  # rook
-                    self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
-                    self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
-                    self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
-                elif tmp == 'K' and 'Q' in self.castling_rights and 'c1' in king_moves:
-                    self.board[7][self.LETTER_TO_INDEX['a']] = None  # rook
-                    self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
-                    self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
-                    self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
-                elif tmp == 'k' and 'k' in self.castling_rights and 'g8' in king_moves:
-                    self.board[0][self.LETTER_TO_INDEX['h']] = None  # rook
-                    self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
-                    self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
-                    self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
-                elif tmp == 'k' and 'q' in self.castling_rights and 'c8' in king_moves:
-                    self.board[0][self.LETTER_TO_INDEX['a']] = None  # rook
-                    self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
-                    self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
-                    self.board[0][self.LETTER_TO_INDEX['d']] = 'r'
-                else:
-                    self.board[start_row][start_col] = None
-                    self.board[end_row][end_col] = tmp
-
-            # tah - en passant
-            elif tmp in 'pP' and self.en_passant == end_position and self.en_passant in self.get_pawn_moves(
-                    start_position[0], ord(start_position[1]) - ord('0')):
-                self.board[start_row][start_col] = None
-                self.board[end_row][end_col] = tmp
-                ep_row = (end_row - 1) if (tmp == 'p') else (end_row + 1)
-                self.board[ep_row][end_col] = None
-            # tah - ostatni
-            else:
-                self.board[start_row][start_col] = None
-                self.board[end_row][end_col] = tmp
-
-            # TOHLE UZ NENI TAH
-            # brani mimochodem
-            self.en_passant = '-'
-            if tmp in 'pP':
-                if self.white_plays and start_row == 6 and end_row == 4:
-                    self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row - 1])
-                elif not self.white_plays and start_row == 1 and end_row == 3:
-                    self.en_passant = start_position[0] + str(self.INDEX_TO_NUMBER[start_row + 1])
-            # rosada
-            elif tmp in 'kK':
-                if tmp == 'k':
-                    self.castling_rights = self.castling_rights.replace('kq', '')
-                else:
-                    self.castling_rights = self.castling_rights.replace('KQ', '')
-                if self.castling_rights == '':
-                    self.castling_rights = '-'
-            elif tmp in 'rR':
-                if tmp == 'r':
-                    if start_position == 'a8':
-                        self.castling_rights = self.castling_rights.replace('q', '')
-                    elif start_position == 'h8':
-                        self.castling_rights = self.castling_rights.replace('k', '')
-                else:
-                    if start_position == 'a1':
-                        self.castling_rights = self.castling_rights.replace('Q', '')
-                    elif start_position == 'h1':
-                        self.castling_rights = self.castling_rights.replace('K', '')
+            if to_history: self.__add_move_to_history()
 
             if self.check_checkmate():
                 self.game_over = True
             self.white_plays = not self.white_plays
-
-            # check in pawn is at the end
-            if (not self.white_plays and tmp == 'P' and end_row == 0) or (self.white_plays and tmp == 'p' and end_row == 7):
-                self.__add_move_to_history()
-                raise PromotePawnException
-            self.__add_move_to_history()
 
             return True
         return False
@@ -333,26 +237,9 @@ class Chess:
         """
         file = start_position[0]
         rank = ord(start_position[1]) - ord('0')
-        piece = (self.__find_piece_on_coords(file, rank))
-        piece = piece.lower()
-        if piece == 'p':
-            if end_position in self.get_pawn_moves(file, rank):
-                return True
-        elif piece == 'r':
-            if end_position in self.get_rook_moves(file, rank):
-                return True
-        elif piece == 'n':
-            if end_position in self.get_knight_moves(file, rank):
-                return True
-        elif piece == 'b':
-            if end_position in self.get_bishop_moves(file, rank):
-                return True
-        elif piece == 'q':
-            if end_position in self.get_queen_moves(file, rank):
-                return True
-        elif piece == 'k':
-            if end_position in self.get_king_moves(file, rank):
-                return True
+        if end_position in self.get_moves(file, rank):
+            return True
+        return False
 
     """ Other functions concerning pieces """
 
@@ -383,25 +270,32 @@ class Chess:
                 return True
         return False
 
-    def promote_pawn(self, piece):
+    def promote_pawn(self, piece, to_history=True):
         """
         function finds pawn at the first/eight (depending on current player) and promotes it to given piece
+        :param to_history: True if the move should be added to history, else False
         :param piece: letter representing piece (lowercase for black, uppercase for white)
         :return:
         """
-        if self.white_plays: # = hledam cerneho pesaka
-            for file in 'abcdefgh':
-                if self.__find_piece_on_coords(file, 1) == 'p':
-                    self.board[7][self.LETTER_TO_INDEX[file]] = piece.lower()
-                    break
-        else:
+        if self.white_plays:  # hledam bileho pesaka
             for file in 'abcdefgh':
                 if self.__find_piece_on_coords(file, 8) == 'P':
                     self.board[0][self.LETTER_TO_INDEX[file]] = piece.upper()
                     break
+        else:  # hledam cerneho pesaka
+            for file in 'abcdefgh':
+                if self.__find_piece_on_coords(file, 1) == 'p':
+                    self.board[7][self.LETTER_TO_INDEX[file]] = piece.lower()
+                    break
 
+        # finish the move
+        if to_history: self.__add_move_to_history()  # save move
+        if self.check_checkmate():
+            self.game_over = True  # if it's a checkmate, end the game
+        self.white_plays = not self.white_plays  # change the players
 
     """ Piece moves """
+
     # TODO: pri sachu vyradit z moznych tahu vsechny, ktere nezabrani sachu + KRAL SE NEDA VZIT
     def get_pawn_moves(self, file, rank):
         """
@@ -962,13 +856,11 @@ class Chess:
         :param kwargs:
         :return: True if king is in check, else False
         """
-        board=self.board
+        board = self.board
         if 'board' in kwargs:
             board = kwargs['board']
         king = 'K' if self.white_plays else 'k'
         row = [row for row in board if king in row][0]
-        print(board)
-        print(row, board.index(row))
         rank = self.INDEX_TO_NUMBER[board.index(row)]
         file_num = row.index(king)
 
@@ -982,6 +874,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'rq':
                     return True
+                break
         # -to the right
         for f in range(file_num + 1, 8):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
@@ -990,6 +883,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'rq':
                     return True
+                break
 
         # vertical direction
         # -down
@@ -1000,6 +894,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'rq':
                     return True
+                break
         # -up
         for r in range(rank + 1, 9):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], r, board)
@@ -1008,6 +903,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'rq':
                     return True
+                break
 
         # checks for checks from bishops and queen
         # from left to right
@@ -1020,6 +916,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'bq':
                     return True
+                break
             i += 1
         i = 1
         # -down
@@ -1030,6 +927,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'bq':
                     return True
+                break
             i += 1
 
         # from right to left
@@ -1042,6 +940,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'bq':
                     return True
+                break
             i += 1
         i = 1
         # -up
@@ -1052,6 +951,7 @@ class Chess:
             elif piece is not None:
                 if piece.lower() in 'bq':
                     return True
+                break
             i += 1
 
         # checks for checks from knights
@@ -1109,31 +1009,22 @@ class Chess:
             # bottom left
             if 0 <= (file_num - 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1, board)
-                if (piece is not None) and (not self.__is_own_piece(piece)):
-                    if piece == 'P':
-                        return True
+                if piece == 'P':
+                    return True
             # bottom right
             if 0 <= (file_num + 1) <= 7 and 0 < (rank - 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1, board)
-                if (piece is not None) and (not self.__is_own_piece(piece)):
-                    if piece == 'P':
-                        return True
+                if piece == 'P':
+                    return True
         else:
             # top left
-            print(file_num, rank)
-            print(0 <= (file_num - 1) <= 7, 0 < (rank + 1) <= 8, 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8)
             if 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1, board)
-                #if (piece is not None) and (not self.__is_own_piece(piece)):
-                print(piece, piece == 'p')
                 if piece == 'p':
                     return True
             # top right
-            print(0 <= (file_num + 1) <= 7, 0 < (rank + 1) <= 8, 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8)
             if 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8:
                 piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1, board)
-                #if (piece is not None) and (not self.__is_own_piece(piece)):
-                print(piece, piece == 'p')
                 if piece == 'p':
                     return True
 
@@ -1141,52 +1032,43 @@ class Chess:
         # dolu
         if 0 < (rank - 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank - 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # sikmo dolu vpravo
         if 0 <= (file_num + 1) <= 7 and 0 < (rank - 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank - 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # vpravo
         if 0 <= (file_num + 1) <= 7:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # sikmo nahoru vpravo
         if 0 <= (file_num + 1) <= 7 and 0 < (rank + 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num + 1], rank + 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # nahoru
         if 0 <= (rank + 1) <= 7:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank + 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # sikmo nahoru vlevo
         if 0 <= (file_num - 1) <= 7 and 0 < (rank + 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank + 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # vlevo
         if 0 <= (file_num - 1) <= 7:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # sikmo dolu vlevo
         if 0 <= (file_num - 1) <= 7 and 0 < (rank - 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num - 1], rank - 1)
-            print(piece)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
-
         return False
 
     """ Print board """
