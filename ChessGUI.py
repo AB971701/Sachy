@@ -263,6 +263,7 @@ class ChessGUI:
         tk.Button(self.main, text="Enter", command=self.__save).grid(column=0, row=1)
         self.name.focus_set()
 
+
     def Promotion(self):
         """
         Makes a box to choose which piece you want to promote to
@@ -270,15 +271,6 @@ class ChessGUI:
         """
         self.promo = tk.Toplevel(self.root)
         if self.chess.white_plays:
-            self.promotion_q = tk.PhotoImage(file=self.choices['q'])
-            tk.Button(self.promo, image=self.promotion_q, command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
-            self.promotion_r = tk.PhotoImage(file=self.choices['r'])
-            tk.Button(self.promo, image=self.promotion_r, command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
-            self.promotion_b = tk.PhotoImage(file=self.choices['b'])
-            tk.Button(self.promo, image=self.promotion_b, command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
-            self.promotion_n = tk.PhotoImage(file=self.choices['n'])
-            tk.Button(self.promo, image=self.promotion_n, command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
-        else:
             self.promotion_Q = tk.PhotoImage(file=self.choices['Q'])
             tk.Button(self.promo, image=self.promotion_Q, command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
             self.promotion_R = tk.PhotoImage(file=self.choices['R'])
@@ -287,9 +279,21 @@ class ChessGUI:
             tk.Button(self.promo, image=self.promotion_B, command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
             self.promotion_N = tk.PhotoImage(file=self.choices['N'])
             tk.Button(self.promo, image=self.promotion_N, command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
-        self.canvas.configure(state='disabled', takefocus=0)
-        self.promo.focus_set()
-        pass
+        else:
+            self.promotion_q = tk.PhotoImage(file=self.choices['q'])
+            tk.Button(self.promo, image=self.promotion_q, command=lambda: self.OnButtonClick(0)).grid(column=0, row=0)
+            self.promotion_r = tk.PhotoImage(file=self.choices['r'])
+            tk.Button(self.promo, image=self.promotion_r, command=lambda: self.OnButtonClick(1)).grid(column=0, row=1)
+            self.promotion_b = tk.PhotoImage(file=self.choices['b'])
+            tk.Button(self.promo, image=self.promotion_b, command=lambda: self.OnButtonClick(2)).grid(column=0, row=2)
+            self.promotion_n = tk.PhotoImage(file=self.choices['n'])
+            tk.Button(self.promo, image=self.promotion_n, command=lambda: self.OnButtonClick(3)).grid(column=0, row=3)
+        self.canvas.configure(state='disabled')
+        self.menubar.entryconfig("New game", state='disabled')
+        self.menubar.entryconfig("Save game", state='disabled')
+        self.menubar.entryconfig("Load game", state='disabled')
+        self.menubar.entryconfig("Ai or Player", state='disabled')
+        self.promo.overrideredirect(True)
 
     def OnButtonClick(self, button_id):
         """
@@ -311,6 +315,10 @@ class ChessGUI:
         self.AfterMove()
         self.promo.destroy()
         self.canvas.configure(state='normal')
+        self.menubar.entryconfig("New game", state='normal')
+        self.menubar.entryconfig("Save game", state='normal')
+        self.menubar.entryconfig("Load game", state='normal')
+        self.menubar.entryconfig("Ai or Player", state='normal')
         self.canvas.focus_set()
 
     def AiVSP(self):
