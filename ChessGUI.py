@@ -2,6 +2,7 @@ import tkinter as tk
 from Chess import Chess, PromotePawnException
 from Minimax import Minimax
 import ctypes
+from math import ceil
 
 
 class ChessGUI:
@@ -160,8 +161,8 @@ class ChessGUI:
             for square in range(len(board[line])):
                 if board[line][square] in self.choices:
                     piece = tk.PhotoImage(file=self.choices.get(board[line][square]))
-                    if (self.size - 100) // 8 < 100:
-                        piece = piece.subsample(int(1 / ((self.size - 100) / 8) / piece.width()), int(1 / ((self.size - 100) / 8) / piece.width()))
+                    if (self.size - 100) // 8 < 91:
+                        piece = piece.subsample(int(ceil(piece.width()/((self.size-100)/8))))
                     else:
                         piece = piece.zoom(int(((self.size - 100) / 8) / piece.width()),
                                                 int(((self.size - 100) / 8) / piece.width()))

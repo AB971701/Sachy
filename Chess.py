@@ -293,7 +293,6 @@ class Chess:
 
     """ Piece moves """
 
-    # TODO: pri sachu vyradit z moznych tahu vsechny, ktere nezabrani sachu
     def get_pawn_moves(self, file, rank):
         """
         function finds all moves available for a pawn standing at given coordinates
@@ -661,7 +660,6 @@ class Chess:
                     possible_moves.append(self.INDEX_TO_LETTER[file_num - 1] + str(rank - 1))
 
             # rosada
-            # TODO: kontrola sachu – kral nemuze byt v sachu ani na zacatku, ani v prubehu, ani na konci
             if self.white_plays:
                 # kingside
                 if ('K' in self.castling_rights) and (self.board[-1][self.LETTER_TO_INDEX['f']] is None) and (
@@ -682,6 +680,8 @@ class Chess:
                         self.board[0][self.LETTER_TO_INDEX['c']] is None) and (
                         self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
+
+
             # find and delete moves that would lead to check
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
@@ -1221,9 +1221,6 @@ class Chess:
                 if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
                     return False
         return True
-
-
-    # TODO: stalemate
 
 
 def play_from_file(filepath):
