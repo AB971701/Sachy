@@ -136,13 +136,13 @@ class ChessGUI:
                                                            outline=""))
         letters = "abcdefgh"
         for i in range(8):
-            canvas.create_text(int((i+1) * int(self.size - 100) / 8),
+            canvas.create_text(50 + (self.size - 100) // 16 + i * (self.size - 100) // 8,
                                self.size - 25,
                                text=letters[i],
                                font='Arial',
                                fill='black')
             canvas.create_text(25,
-                               self.size - int((i+1) * int(self.size - 100) / 8),
+                               self.size - 50 - (self.size - 100) // 16 - i * (self.size - 100) // 8,
                                text=i + 1,
                                font='Arial',
                                fill='black')
