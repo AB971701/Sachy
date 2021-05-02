@@ -1,12 +1,16 @@
 import tkinter as tk
 from Chess import Chess, PromotePawnException
 from Minimax import Minimax
+import ctypes
+
 
 class ChessGUI:
     root = tk.Tk()
     root.title("Chess")
     menubar = tk.Menu(root)
-    canvas = tk.Canvas(bg='grey', width='900', height='900')
+    user32 = ctypes.windll.user32
+    size = user32.GetSystemMetrics(1) - 100
+    canvas = tk.Canvas(bg='grey', width=size, height=size)
     #previous board
     __previous_board = [[None for _ in range(8)] for _ in range(8)]
     pieces = None
@@ -41,7 +45,7 @@ class ChessGUI:
                         board[i][j] = c
                         j += 1
                     elif c in "12345678":
-                        j += ord(c) - ord('0')
+                        j += int(c)
         for i in range(8):
             for k in range(8):
                 self.__previous_board[i][k] = board[i][k]
@@ -64,20 +68,23 @@ class ChessGUI:
         """
         if self.canvas.cget('state') != 'disabled':
             # last click is the previous click
-            if event.x >= 50 and event.x <= 850 and event.y >= 50 and event.y <= 850:
+            if event.x >= 50 and event.x <= self.size - 50 and event.y >= 50 and event.y <= self.size - 50:
                 # mouse click funtion
-                piece = self.chess.board[int((event.y - 50) / 100)][int((event.x - 50) / 100)]
-                self.ChangeColor('pale goldenrod', 'dark olive green')
-                self.possible_moves_gui.clear()
-                self.possible_moves = self.chess.get_moves(self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)],
-                                                              self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
-                for move in self.possible_moves:
-                    self.possible_moves_gui.append(self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
-                self.ChangeColor('seashell3', 'seashell4')
+                piece = self.chess.board[int((event.y - 50) / ((self.size - 100) / 8))][int((event.x - 50) / ((self.size - 100) / 8))]
+                if piece != None:
+                    self.ChangeColor('pale goldenrod', 'dark olive green')
+                    self.possible_moves_gui.clear()
+                    self.possible_moves = self.chess.get_moves(
+                        self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))],
+                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
+                    for move in self.possible_moves:
+                        self.possible_moves_gui.append(
+                            self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
+                    self.ChangeColor('seashell3', 'seashell4')
                 if self.last_click != None:
                     try:
-                        if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])):
+                        if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
+                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])):
                             if self.against_player is False:
                                 self.mimax.minmax()
                             self.AfterMove()
@@ -86,8 +93,8 @@ class ChessGUI:
                             self.possible_moves.clear()
                             self.last_click = None
                         elif piece != None:
-                            self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                            self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
+                                self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
                         self.Promotion()
                         self.AfterMove()
@@ -96,8 +103,8 @@ class ChessGUI:
                         self.possible_moves.clear()
                         self.last_click = None
                 elif piece != None:
-                    self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / 100)] + str(
-                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / 100)])
+                    self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
+                        self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
 
     def __CreateBoard(self, canvas):
         """
@@ -111,30 +118,30 @@ class ChessGUI:
         for i in range(8):
             for k in range(8):
                 if (i + k) % 2 == 0:
-                    sq = self.canvas.create_rectangle(50 + k * 100,
-                                                       50 + i * 100,
-                                                       150 + k * 100,
-                                                       150 + i * 100,
+                    sq = self.canvas.create_rectangle(50 + int(k * (self.size - 100) / 8),
+                                                        50 + int(i * int(self.size - 100) / 8),
+                                                        50 + int((k+1) * (self.size - 100) / 8),
+                                                        50 + int((i+1) * int(self.size - 100) / 8),
                                                        fill='pale goldenrod',
                                                        outline="")
                     self.white.append(sq)
                     squares.append(sq)
                 else:
-                    squares.append(canvas.create_rectangle(50 + k * 100,
-                                                           50 + i * 100,
-                                                           150 + k * 100,
-                                                           150 + i * 100,
+                    squares.append(canvas.create_rectangle(50 + int(k * (self.size - 100) / 8),
+                                                        50 + int(i * int(self.size - 100) / 8),
+                                                        50 + int((k+1) * (self.size - 100) / 8),
+                                                        50 + int((i+1) * int(self.size - 100) / 8),
                                                            fill='dark olive green',
                                                            outline=""))
         letters = "abcdefgh"
         for i in range(8):
-            canvas.create_text((i + 1) * 100,
-                               900 - 25,
+            canvas.create_text(int((i+1) * int(self.size - 100) / 8),
+                               self.size - 25,
                                text=letters[i],
                                font='Arial',
                                fill='black')
             canvas.create_text(25,
-                               900 - (i + 1) * 100,
+                               self.size - int((i+1) * int(self.size - 100) / 8),
                                text=i + 1,
                                font='Arial',
                                fill='black')
@@ -153,8 +160,9 @@ class ChessGUI:
             for square in range(len(board[line])):
                 if board[line][square] in self.choices:
                     piece = tk.PhotoImage(file=self.choices.get(board[line][square]))
+                    piece = piece.subsample(int(((self.size - 100) / piece.width() / 8)), int(((self.size - 100) / piece.width() / 8)))
                     pieces.append(piece)
-                    canvas.create_image(55 + square * 100, 55 + line * 100, anchor='nw', image=piece)
+                    canvas.create_image(50 + int(((self.size - 100) / 8 - piece.width()) / 2) + square * int((self.size - 100) / 8), 50 + int(((self.size - 100) / 8 - piece.width()) / 2) + line * int((self.size - 100) / 8), anchor='nw', image=piece)
                 else:
                     pieces.append(None)
         return pieces
@@ -175,11 +183,20 @@ class ChessGUI:
                                 self.pieces[line * 8 + square] = None
                             else:
                                 self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                                self.canvas.create_image(55 + square * 100, 55 + line * 100, anchor='nw', image=self.pieces[line * 8 + square])
+                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
+                                    int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)),
+                                    int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)))
+                                self.canvas.create_image(50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + square * int((self.size - 100) / 8),
+                                                         50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + line * int((self.size - 100) / 8),
+                                                         anchor='nw', image=self.pieces[line * 8 + square])
                         else:
                             self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                            self.canvas.create_image(55 + square * 100, 55 + line * 100, anchor='nw',
-                                                image=self.pieces[line * 8 + square])
+                            self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
+                                int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)),
+                                int(((self.size - 100) / self.pieces[line * 8 + square].width() / 8)))
+                            self.canvas.create_image(50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + square * int((self.size - 100) / 8),
+                                                     50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + line * int((self.size - 100) / 8),
+                                                     anchor='nw', image=self.pieces[line * 8 + square])
             for i in range(8):
                 for k in range(8):
                     self.__previous_board[i][k] = self.chess.board[i][k]
