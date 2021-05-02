@@ -188,10 +188,8 @@ class ChessGUI:
                                 self.pieces[line * 8 + square] = None
                             else:
                                 self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                                if (self.size - 100) // 8 < 100:
-                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
-                                        int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
-                                        int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                                if (self.size - 100) // 8 < 91:
+                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(int(ceil(self.pieces[line * 8 + square].width() / ((self.size - 100) / 8))))
                                 else:
                                     self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
                                         int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
@@ -202,9 +200,7 @@ class ChessGUI:
                         else:
                             self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
                             if (self.size - 100) // 8 < 100:
-                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(
-                                    int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
-                                    int(1 / ((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(int(ceil(self.pieces[line * 8 + square].width() / ((self.size - 100) / 8))))
                             else:
                                 self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
                                     int(((self.size - 100) / 8) // self.pieces[line * 8 + square].width()),
