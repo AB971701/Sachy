@@ -1,7 +1,6 @@
 from Chess import Chess
 import random
 from copy import deepcopy
-import time
 
 class Minimax:
     depth = 3
@@ -40,20 +39,11 @@ class Minimax:
             for piece in possible_moves:  # TODO
                 if piece[1] is not None:
                     for move in piece[1]:
-                        self.chess.move(piece[0], move)
+                        self.chess.move(piece[0], move, False)
                         self.chess.white_plays = white_plays
                         values.append([piece[0], move, self.minmax(deep + 1)])
                         self.chess.board = deepcopy(board)
-            """
-            for piece in possible_moves: #TODO
-                if piece[1] is not None:
-                    for move in piece[1]:
-                        self.chess.board[self.chess.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.chess.LETTER_TO_INDEX[move[0]]] = self.chess.board[
-                            self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]]
-                        self.chess.board[self.chess.NUMBER_TO_INDEX[ord(piece[0][1]) - ord('0')]][self.chess.LETTER_TO_INDEX[piece[0][0]]] = None
-                        values.append([self.chess.board, self.minmax(not white_plays, deep + 1)])
-                        self.chess.board = deepcopy(board)
-            """
+
             if deep == 0:
                 if white_plays:
                     self.chess.move(max(values, key=lambda x: x[2])[0], max(values, key=lambda x: x[2])[1])

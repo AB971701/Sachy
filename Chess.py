@@ -689,7 +689,7 @@ class Chess:
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
-                print(move, ':')
+                #print(move, ':')
                 board = deepcopy(self.board)
                 # castling
                 if self.white_plays:
