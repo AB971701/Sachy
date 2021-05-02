@@ -101,22 +101,22 @@ class Chess:
             # tah - rosada
             if tmp in 'kK':
                 king_moves = self.get_king_moves(start_position[0], int(start_position[1]))
-                if (tmp == 'K') and ('K' in self.castling_rights) and ('g1' in king_moves):
+                if (tmp == 'K') and ('K' in self.castling_rights) and ('g1' == end_position) and ('g1' in king_moves):
                     self.board[7][self.LETTER_TO_INDEX['h']] = None  # rook
                     self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['g']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['f']] = 'R'
-                elif (tmp == 'K') and ('Q' in self.castling_rights) and ('c1' in king_moves):
+                elif (tmp == 'K') and ('Q' in self.castling_rights) and ('c1' == end_position) and ('c1' in king_moves):
                     self.board[7][self.LETTER_TO_INDEX['a']] = None  # rook
                     self.board[7][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[7][self.LETTER_TO_INDEX['c']] = 'K'
                     self.board[7][self.LETTER_TO_INDEX['d']] = 'R'
-                elif (tmp == 'k') and ('k' in self.castling_rights) and ('g8' in king_moves):
+                elif (tmp == 'k') and ('k' in self.castling_rights) and ('g8' == end_position) and ('g8' in king_moves):
                     self.board[0][self.LETTER_TO_INDEX['h']] = None  # rook
                     self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['g']] = 'k'
                     self.board[0][self.LETTER_TO_INDEX['f']] = 'r'
-                elif (tmp == 'k') and ('q' in self.castling_rights) and ('c8' in king_moves):
+                elif (tmp == 'k') and ('q' in self.castling_rights) and ('c8' == end_position) and ('c8' in king_moves):
                     self.board[0][self.LETTER_TO_INDEX['a']] = None  # rook
                     self.board[0][self.LETTER_TO_INDEX['e']] = None  # king
                     self.board[0][self.LETTER_TO_INDEX['c']] = 'k'
