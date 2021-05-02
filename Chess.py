@@ -689,41 +689,41 @@ class Chess:
                         self.board[0][self.LETTER_TO_INDEX['d']] is None):
                     possible_moves.append('c8')
 
+            print(possible_moves)
             # find and delete moves that would lead to check
             king = 'K' if self.white_plays else 'k'
             delete_moves = []
             for move in possible_moves:
                 board = deepcopy(self.board)
                 # castling
-                if self.castling_rights != '-':
-                    if self.white_plays:
-                        if 'K' in self.castling_rights and move == 'g1':
-                            board[-1][self.LETTER_TO_INDEX[file]] = None
-                            board[-1][self.LETTER_TO_INDEX['g']] = 'K'
-                            board[-1][self.LETTER_TO_INDEX['h']] = None
-                            board[-1][self.LETTER_TO_INDEX['f']] = 'R'
-                        elif 'Q' in self.castling_rights and move == 'c1':
-                            board[-1][self.LETTER_TO_INDEX[file]] = None
-                            board[-1][self.LETTER_TO_INDEX['c']] = 'K'
-                            board[-1][self.LETTER_TO_INDEX['a']] = None
-                            board[-1][self.LETTER_TO_INDEX['d']] = 'R'
-                    else:
-                        if 'k' in self.castling_rights and move == 'g8':
-                            board[0][self.LETTER_TO_INDEX[file]] = None
-                            board[0][self.LETTER_TO_INDEX['g']] = 'k'
-                            board[0][self.LETTER_TO_INDEX['h']] = None
-                            board[0][self.LETTER_TO_INDEX['f']] = 'r'
-                        if 'q' in self.castling_rights and move == 'c8':
-                            board[0][self.LETTER_TO_INDEX[file]] = None
-                            board[0][self.LETTER_TO_INDEX['c']] = 'k'
-                            board[0][self.LETTER_TO_INDEX['a']] = None
-                            board[0][self.LETTER_TO_INDEX['d']] = 'r'
+                print(self.castling_rights)
+                if self.white_plays and 'K' in self.castling_rights and move == 'g1':
+                    board[-1][self.LETTER_TO_INDEX[file]] = None
+                    board[-1][self.LETTER_TO_INDEX['g']] = 'K'
+                    board[-1][self.LETTER_TO_INDEX['h']] = None
+                    board[-1][self.LETTER_TO_INDEX['f']] = 'R'
+                elif self.white_plays and 'Q' in self.castling_rights and move == 'c1':
+                    board[-1][self.LETTER_TO_INDEX[file]] = None
+                    board[-1][self.LETTER_TO_INDEX['c']] = 'K'
+                    board[-1][self.LETTER_TO_INDEX['a']] = None
+                    board[-1][self.LETTER_TO_INDEX['d']] = 'R'
+                elif not self.white_plays and 'k' in self.castling_rights and move == 'g8':
+                    board[0][self.LETTER_TO_INDEX[file]] = None
+                    board[0][self.LETTER_TO_INDEX['g']] = 'k'
+                    board[0][self.LETTER_TO_INDEX['h']] = None
+                    board[0][self.LETTER_TO_INDEX['f']] = 'r'
+                elif not self.white_plays and 'q' in self.castling_rights and move == 'c8':
+                    board[0][self.LETTER_TO_INDEX[file]] = None
+                    board[0][self.LETTER_TO_INDEX['c']] = 'k'
+                    board[0][self.LETTER_TO_INDEX['a']] = None
+                    board[0][self.LETTER_TO_INDEX['d']] = 'r'
                 # other moves
                 else:
-                    board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
+                    board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = king
                     board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
 
                 if self.king_in_check(board=board):
+                    print(move)
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
@@ -1228,8 +1228,7 @@ class Chess:
         """
         for row in self.board:
             for field in row:
-                if field is not None and self.__is_own_piece(field) and self.get_moves(
-                        self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+                if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
                     return False
         return True
 
