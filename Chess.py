@@ -75,7 +75,7 @@ class Chess:
         """
         with open(filepath, "w") as file:
             for move in self.board_history:
-                file.write("%s" % move)
+                file.write("%s\n" % move)
 
     """ Move execution """
 
@@ -85,7 +85,7 @@ class Chess:
         function performs a move
         :param start_position: position where is the piece standing before the move
         :param end_position: position to which is the piece moved
-        :param to_history: True if the move should be added to history, else False
+        :param to_history: True if the move should be added to history, else False; default value: False
         :return: True if move was valid and it was made, else False
         """
         if self.__is_valid(start_position, end_position):
@@ -203,7 +203,7 @@ class Chess:
 
             if to_history: self.__add_move_to_history()
             self.white_plays = not self.white_plays
-
+            print(self.game_over)
             return True
         return False
 
