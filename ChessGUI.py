@@ -98,6 +98,8 @@ class ChessGUI:
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
                         self.Promotion()
+                        if self.against_player is False:
+                            self.mimax.minmax()
                         self.AfterMove()
                         self.ChangeColor('pale goldenrod', 'dark olive green')
                         self.possible_moves_gui.clear()

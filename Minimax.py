@@ -1,4 +1,4 @@
-from Chess import Chess
+from Chess import Chess, PromotePawnException
 import random
 from copy import deepcopy
 
@@ -22,11 +22,13 @@ class Minimax:
         values = []
         white_plays = self.chess.white_plays
         if self.chess.check_checkmate() == True:
+            if self.chess.check_stalemate():
+                return 0
             if white_plays:
                 # Chess.white_plays
-                return -1
+                return -50
             else:
-                return 1
+                return 50
         else:
             if deep == self.depth:
                 return self.GiveValue()
@@ -39,8 +41,12 @@ class Minimax:
             for piece in possible_moves:  # TODO
                 if piece[1] is not None:
                     for move in piece[1]:
-                        self.chess.move(piece[0], move, False)
+                        try:
+                            self.chess.move(piece[0], move, False)
+                        except PromotePawnException:
+                            self.chess.promote_pawn('q', False)
                         self.chess.white_plays = white_plays
+                        self.chess.game_over = False
                         values.append([piece[0], move, self.minmax(deep + 1)])
                         self.chess.board = deepcopy(board)
 
@@ -55,4 +61,4 @@ class Minimax:
                 return min(values, key=lambda x: x[2])[2]
 
     def GiveValue(self):
-        return random.uniform(-1, 1)
+        return random.uniform(-50, 50)
