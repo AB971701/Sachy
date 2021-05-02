@@ -241,6 +241,9 @@ class ChessGUI:
             self.canvas.delete('fin')
         #create new game
         self.chess = Chess()
+        self.ChangeColor('pale goldenrod', 'dark olive green')
+        self.possible_moves_gui.clear()
+        self.last_click = None
         self.AfterMove()
 
     def __load(self):
@@ -255,6 +258,9 @@ class ChessGUI:
             self.AfterMove()
             self.main.destroy()
             self.canvas.focus_set()
+            self.ChangeColor('pale goldenrod', 'dark olive green')
+            self.possible_moves_gui.clear()
+            self.last_click = None
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
 
