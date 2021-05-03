@@ -611,7 +611,6 @@ class Chess:
         :return: list of all possible queen moves
         """
         possible_moves = self.get_rook_moves(file, rank) + self.get_bishop_moves(file, rank)
-
         return possible_moves
 
     def get_king_moves(self, file, rank):
@@ -718,7 +717,7 @@ class Chess:
                 else:
                     board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = king
                     board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                if self.king_in_check(board=board):
+                if self.king_in_check(board):
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
@@ -1157,6 +1156,7 @@ class Chess:
     """ Print board """
 
     def print_board(self):
+        #print('white plays') if self.white_plays else print('black plays')
         for line in self.board:
             for cell in line:
                 print(cell if cell is not None else '-', end=' ')
@@ -1236,41 +1236,3 @@ class Chess:
                 if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
                     return False
         return True
-
-
-def play_from_file(filepath):
-    c = Chess('test.txt')
-    c.print_board()
-    with open(filepath) as file:
-        moves = [(move.strip()).split(',') for move in file]
-        print(moves)
-    i = 1
-    for move in moves:
-        print(i, 'white plays' if c.white_plays else 'black plays')
-        if c.move(move[0], move[1]):
-            c.print_board()
-            print()
-        else:
-            print('invalid move')
-            break
-        if (c.check_checkmate()):
-            print('game over')
-            break
-        i += 1
-
-
-if __name__ == "__main__":
-    """c = Chess('fen.txt')
-    c.print_board()
-    print()
-    c.move('c7', 'c6')
-    c.print_board()
-    print()
-    print(c.move('e1', 'g1'))
-    c.print_board()
-    print()"""
-    # play_from_file('hraII.txt')
-    c = Chess('mat.txt')
-    print(c.board)
-    print(c.get_king_moves('g', 8))
-    print(c.check_checkmate())
