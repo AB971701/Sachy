@@ -364,6 +364,8 @@ class ChessGUI:
             self.chess.board_history.pop()
             if self.against_player:
                 self.chess.white_plays = not self.chess.white_plays
+            else:
+                self.chess.board_history.pop()
         self.chess.board = deepcopy(self.__previous_board)
         self.AfterMove()
 
