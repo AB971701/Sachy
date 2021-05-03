@@ -353,7 +353,8 @@ class ChessGUI:
             self.chess.game_over = False
         if self.chess.board != self.__previous_board:
             self.chess.board_history.pop()
-            self.chess.white_plays = not self.chess.white_plays
+            if self.against_player:
+                self.chess.white_plays = not self.chess.white_plays
         self.chess.board = deepcopy(self.__previous_board)
         self.AfterMove()
 
