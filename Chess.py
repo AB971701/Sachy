@@ -193,6 +193,9 @@ class Chess:
                     not self.white_plays and tmp == 'p' and end_row == 7):
                 raise PromotePawnException
 
+            if to_history: self.__add_move_to_history()
+            self.white_plays = not self.white_plays
+
             # checkmate
             if self.check_checkmate():
                 self.game_over = True
@@ -200,9 +203,6 @@ class Chess:
             # stalemate
             if self.check_stalemate():
                 self.game_over = True
-
-            if to_history: self.__add_move_to_history()
-            self.white_plays = not self.white_plays
             return True
         return False
 
@@ -716,11 +716,7 @@ class Chess:
                 else:
                     board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = king
                     board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                    print(board)
-                if move == 'b2':
-                    print(self.king_in_check())
                 if self.king_in_check(board=board):
-
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
@@ -1203,12 +1199,13 @@ class Chess:
     """ End of game """
 
     def check_checkmate(self):
-        if self.king_in_check():
+        """if self.king_in_check():
             king = 'K' if self.white_plays else 'k'
             row = [row for row in self.board if king in row][0]
             king_row = self.board.index(row)
             king_col = row.index(king)
             possible_king_moves = self.get_king_moves(self.INDEX_TO_LETTER[king_col], self.INDEX_TO_NUMBER[king_row])
+            print(possible_king_moves)
             for move in possible_king_moves:
                 board = deepcopy(self.board)
                 board[self.NUMBER_TO_INDEX[ord(move[1]) - ord('0')]][self.LETTER_TO_INDEX[move[0]]] = king
@@ -1216,7 +1213,16 @@ class Chess:
                 if not self.king_in_check(board=board):
                     return False
             return True
+        return False"""
+        if self.king_in_check():
+            for row in self.board:
+                for field in row:
+                    if field is not None and self.__is_own_piece(field) and self.get_moves(
+                            self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+                        return False
+            return True
         return False
+
 
     def check_stalemate(self):
         """
