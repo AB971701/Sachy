@@ -79,7 +79,7 @@ class Chess:
 
     """ Move execution """
 
-    # TODO: na 8. rank muze kral jenom sikmo, kral nemuze brat figurky kdyz je v sachu
+    # TODO: kral nemuze brat figurky kdyz je v sachu
     def move(self, start_position, end_position, to_history=True):
         """
         function performs a move
@@ -467,7 +467,7 @@ class Chess:
                 board = deepcopy(self.board)
                 # normalni tah
                 board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'R' if self.white_plays else 'r'
 
                 if self.king_in_check(board):
                     delete_moves.append(move)
@@ -526,7 +526,7 @@ class Chess:
                 board = deepcopy(self.board)
                 # normalni tah
                 board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'N' if self.white_plays else 'n'
 
                 if self.king_in_check(board):
                     delete_moves.append(move)
@@ -588,15 +588,13 @@ class Chess:
                     break
                 possible_moves.append(self.INDEX_TO_LETTER[file_num + i] + str(rank + i))
                 i += 1
-
             # kral v sachu
             delete_moves = []
             for move in possible_moves:
                 board = deepcopy(self.board)
                 # normalni tah
                 board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'p'
-
+                board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = 'B' if self.white_plays else 'b'
                 if self.king_in_check(board):
                     delete_moves.append(move)
             for move in delete_moves:
@@ -718,8 +716,11 @@ class Chess:
                 else:
                     board[self.NUMBER_TO_INDEX[int(move[1])]][self.LETTER_TO_INDEX[move[0]]] = king
                     board[self.NUMBER_TO_INDEX[rank]][self.LETTER_TO_INDEX[file]] = None
-
+                    print(board)
+                if move == 'b2':
+                    print(self.king_in_check())
                 if self.king_in_check(board=board):
+
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
@@ -951,7 +952,7 @@ class Chess:
         # checks for checks from rooks and queen
         # horizontal direction
         # -to the left
-        for f in range(file_num - 1, 0, -1):
+        for f in range(file_num - 1, -1, -1):
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[f], rank, board)
             if self.__is_own_piece(piece):
                 break
