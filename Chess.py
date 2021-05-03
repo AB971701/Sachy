@@ -300,9 +300,11 @@ class Chess:
 
         # finish the move
         if to_history: self.__add_move_to_history()  # save move
+        self.white_plays = not self.white_plays  # change the players
         if self.check_checkmate():
             self.game_over = True  # if it's a checkmate, end the game
-        self.white_plays = not self.white_plays  # change the players
+        if self.check_stalemate():
+            self.game_over = True
 
     """ Piece moves """
 
