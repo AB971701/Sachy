@@ -3,6 +3,7 @@ from Chess import Chess, PromotePawnException
 from Minimax import Minimax
 import ctypes
 from math import ceil
+from copy import deepcopy
 
 
 class ChessGUI:
@@ -47,13 +48,11 @@ class ChessGUI:
                         j += 1
                     elif c in "12345678":
                         j += int(c)
-        for i in range(8):
-            for k in range(8):
-                self.__previous_board[i][k] = board[i][k]
         self.canvas.pack()
         self.squares = self.__CreateBoard(self.canvas)
         self.pieces = self.__PutPieces(self.canvas, board)
         self.chess = Chess
+        self.__previous_board = deepcopy(self.chess.board)
         self.root.bind("<Button-1>", self.callback)
         self.mimax = Minimax(self.chess)
 
@@ -84,6 +83,7 @@ class ChessGUI:
                     self.ChangeColor('seashell3', 'seashell4')
                 if self.last_click != None:
                     try:
+                        self.__previous_board = deepcopy(self.chess.board)
                         if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])):
                             if self.against_player is False:
@@ -97,9 +97,10 @@ class ChessGUI:
                             self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
-                        self.Promotion()
                         if self.against_player is False:
                             self.mimax.minmax()
+                        else:
+                            self.Promotion()
                         self.AfterMove()
                         self.ChangeColor('pale goldenrod', 'dark olive green')
                         self.possible_moves_gui.clear()
@@ -180,46 +181,30 @@ class ChessGUI:
         :return:
         """
         #after every move refreshes the board
-        if self.__previous_board != self.chess.board:
-            for line in range(len(self.chess.board)):
-                for square in range(len(self.chess.board[line])):
-                    if self.chess.board[line][square] != self.__previous_board[line][square]:
-                        if self.pieces[line * 8 + square] != None:
-                            self.canvas.delete(self.pieces[line * 8 + square])
-                            if self.chess.board[line][square] == None:
-                                self.pieces[line * 8 + square] = None
-                            else:
-                                self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                                if (self.size - 100) // 8 < 91:
-                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(int(ceil(self.pieces[line * 8 + square].width() / ((self.size - 100) / 8))))
-                                else:
-                                    self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
-                                        int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
-                                        int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
-                                self.canvas.create_image(50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + square * int((self.size - 100) / 8),
-                                                         50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + line * int((self.size - 100) / 8),
-                                                         anchor='nw', image=self.pieces[line * 8 + square])
-                        else:
-                            self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
-                            if (self.size - 100) // 8 < 100:
-                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(int(ceil(self.pieces[line * 8 + square].width() / ((self.size - 100) / 8))))
-                            else:
-                                self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
-                                    int(((self.size - 100) / 8) // self.pieces[line * 8 + square].width()),
-                                    int(((self.size - 100) / 8) // self.pieces[line * 8 + square].width()))
-                            self.canvas.create_image(50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + square * int((self.size - 100) / 8),
-                                                     50 + int(((self.size - 100) / 8 - self.pieces[line * 8 + square].width()) / 2) + line * int((self.size - 100) / 8),
-                                                     anchor='nw', image=self.pieces[line * 8 + square])
-            for i in range(8):
-                for k in range(8):
-                    self.__previous_board[i][k] = self.chess.board[i][k]
-                    if self.chess.game_over:
-                        self.canvas.create_text(self.size // 2,
-                                                self.size // 2,
-                                                text="Game finished",
-                                                font=('Arial', 50),
-                                                fill='red',
-                                                tag='fin')
+        for line in range(len(self.chess.board)):
+            for square in range(len(self.chess.board[line])):
+                if self.pieces[line * 8 + square] != None and self.pieces[line * 8 + square] != self.choices.get(self.chess.board[line][square]):
+                    self.canvas.delete(self.pieces[line * 8 + square])
+                if self.chess.board[line][square] == None:
+                    self.pieces[line * 8 + square] = None
+                else:
+                    self.pieces[line * 8 + square] = tk.PhotoImage(file=self.choices.get(self.chess.board[line][square]))
+                    if (self.size - 100) // 8 < 91:
+                        self.pieces[line * 8 + square] = self.pieces[line * 8 + square].subsample(int(ceil(self.pieces[line * 8 + square].width() / ((self.size - 100) / 8))))
+                    else:
+                        self.pieces[line * 8 + square] = self.pieces[line * 8 + square].zoom(
+                            int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()),
+                            int(((self.size - 100) / 8) / self.pieces[line * 8 + square].width()))
+                    self.canvas.create_image(50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + square * int((self.size - 100) / 8),
+                                             50 + ((self.size - 100) // 8 - self.pieces[line * 8 + square].width()) // 2 + line * int((self.size - 100) / 8),
+                                             anchor='nw', image=self.pieces[line * 8 + square])
+        if self.chess.game_over:
+            self.canvas.create_text(self.size // 2,
+                                    self.size // 2,
+                                    text="Game finished",
+                                    font=('Arial', 50),
+                                    fill='red',
+                                    tag='fin')
 
     def ChangeColor(self, color1, color2):
         """
@@ -247,6 +232,7 @@ class ChessGUI:
         self.possible_moves_gui.clear()
         self.last_click = None
         self.AfterMove()
+        self.mimax.NewChess(self.chess)
 
     def __load(self):
         """
@@ -263,6 +249,7 @@ class ChessGUI:
             self.ChangeColor('pale goldenrod', 'dark olive green')
             self.possible_moves_gui.clear()
             self.last_click = None
+            self.mimax.NewChess(self.chess)
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
 
@@ -360,6 +347,16 @@ class ChessGUI:
     def AiVSP(self):
         self.against_player = not self.against_player
 
+    def Back(self):
+        if self.chess.game_over:
+            self.canvas.delete('fin')
+            self.chess.game_over = False
+        if self.chess.board != self.__previous_board:
+            self.chess.board_history.pop()
+            self.chess.white_plays = not self.chess.white_plays
+        self.chess.board = deepcopy(self.__previous_board)
+        self.AfterMove()
+
     def End(self):
         """
         creates the buttons on top
@@ -370,6 +367,7 @@ class ChessGUI:
         self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
         self.menubar.add_command(label="Ai or Player", command=self.AiVSP)
+        self.menubar.add_command(label="Back", command=self.Back)
         self.menubar.add_command(label="Quit", command=self.root.quit)
 
         self.root.config(menu=self.menubar)
