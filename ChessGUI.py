@@ -345,9 +345,17 @@ class ChessGUI:
         self.canvas.focus_set()
 
     def AiVSP(self):
+        """
+        switches between playing with a player and playing with an ai
+        :return:
+        """
         self.against_player = not self.against_player
 
     def Back(self):
+        """
+        allows you to go one turn back if missclicked
+        :return:
+        """
         if self.chess.game_over:
             self.canvas.delete('fin')
             self.chess.game_over = False

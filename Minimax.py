@@ -3,7 +3,7 @@ import random
 from copy import deepcopy
 
 class Minimax:
-    depth = 3
+    depth = 2
 
     def __init__(self, Chess):
         self.chess = Chess
@@ -90,7 +90,34 @@ class Minimax:
         evaluates current position
         :return:
         """
-        return random.uniform(-50, 50)
+        pieces_w = 0
+        pieces_b = 0
+        for row in self.chess.board:
+            for piece in row:
+                if piece is not None:
+                    if piece.isupper():
+                        if piece == "Q":
+                            pieces_w += 9
+                        elif piece == "R":
+                            pieces_w += 5
+                        elif piece == "B":
+                            pieces_w += 3
+                        elif piece == "N":
+                            pieces_w += 3
+                        elif piece == "P":
+                            pieces_w += 1
+                    else:
+                        if piece == "q":
+                            pieces_b += 9
+                        elif piece == "r":
+                            pieces_b += 5
+                        elif piece == "b":
+                            pieces_b += 3
+                        elif piece == "n":
+                            pieces_b += 3
+                        elif piece == "p":
+                            pieces_b += 1
+        return (pieces_w - pieces_b) + random.uniform(-5, 5)
 
     def NewChess(self, chess):
         """
