@@ -25,14 +25,15 @@ class Minimax:
         """
         Checks if we reached checkmate or stalemate, if yes, return value acording to who won 
         """
-        if self.chess.check_checkmate() == True:
+        if self.chess.game_over:
             if self.chess.check_stalemate():
                 return 0
-            if white_plays:
-                # Chess.white_plays
-                return -50
-            else:
-                return 50
+            elif self.chess.check_checkmate():
+                if white_plays:
+                    # Chess.white_plays
+                    return -100
+                else:
+                    return 100
         else:
             """
             Check how deep in recursion you are, if at he bottom, get Value of position
@@ -58,9 +59,9 @@ class Minimax:
                             self.chess.move(piece[0], move, False)
                         except PromotePawnException:
                             self.chess.promote_pawn('q', False)
-                        self.chess.white_plays = white_plays
                         self.chess.game_over = False
                         values.append([piece[0], move, self.minmax(deep + 1)])
+                        self.chess.white_plays = white_plays
                         self.chess.board = deepcopy(board)
 
             if deep == 0:

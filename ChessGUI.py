@@ -349,6 +349,7 @@ class ChessGUI:
         switches between playing with a player and playing with an ai
         :return:
         """
+        self.__previous_board = deepcopy(self.chess.board)
         self.against_player = not self.against_player
 
     def Back(self):
