@@ -22,6 +22,7 @@ class Minimax:
         possible_moves = []
         values = []
         white_plays = self.chess.white_plays
+        castle = self.chess.castling_rights
         """
         Checks if we reached checkmate or stalemate, if yes, return value acording to who won 
         """
@@ -59,9 +60,10 @@ class Minimax:
                             self.chess.move(piece[0], move, False)
                         except PromotePawnException:
                             self.chess.promote_pawn('q', False)
-                        self.chess.game_over = False
                         values.append([piece[0], move, self.minmax(deep + 1)])
+                        self.chess.game_over = False
                         self.chess.white_plays = white_plays
+                        self.chess.castling_rights = castle
                         self.chess.board = deepcopy(board)
 
             if deep == 0:
@@ -78,6 +80,7 @@ class Minimax:
                     Queen is the best in most situations, so automaticaly promote to queen
                     """
                     self.chess.promote_pawn('q')
+            #print(values)
             if white_plays:
                 """
                 returns minmax value of current position

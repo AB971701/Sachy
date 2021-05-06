@@ -97,15 +97,7 @@ class ChessGUI:
                             self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
-                        if self.against_player is False:
-                            self.mimax.minmax()
-                        else:
-                            self.Promotion()
-                        self.AfterMove()
-                        self.ChangeColor('pale goldenrod', 'dark olive green')
-                        self.possible_moves_gui.clear()
-                        self.possible_moves.clear()
-                        self.last_click = None
+                        self.Promotion()
                 elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                     self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
@@ -315,7 +307,11 @@ class ChessGUI:
         self.menubar.entryconfig("New game", state='disabled')
         self.menubar.entryconfig("Save game", state='disabled')
         self.menubar.entryconfig("Load game", state='disabled')
-        self.menubar.entryconfig("Ai or Player", state='disabled')
+        if self.against_player:
+            self.menubar.entryconfig("vs Player", state='disabled')
+        else:
+            self.menubar.entryconfig("vs Ai", state='disabled')
+        self.menubar.entryconfig("Back", state='disabled')
         self.promo.overrideredirect(True)
 
     def OnButtonClick(self, button_id):
@@ -335,20 +331,34 @@ class ChessGUI:
         elif button_id == 3:
             # promote to knight
             self.chess.promote_pawn('n')
-        self.AfterMove()
         self.promo.destroy()
         self.canvas.configure(state='normal')
         self.menubar.entryconfig("New game", state='normal')
         self.menubar.entryconfig("Save game", state='normal')
         self.menubar.entryconfig("Load game", state='normal')
-        self.menubar.entryconfig("Ai or Player", state='normal')
+        if self.against_player:
+            self.menubar.entryconfig("vs Player", state='normal')
+        else:
+            self.menubar.entryconfig("vs Ai", state='normal')
+        self.menubar.entryconfig("Back", state='normal')
         self.canvas.focus_set()
+        self.ChangeColor('pale goldenrod', 'dark olive green')
+        self.possible_moves_gui.clear()
+        self.possible_moves.clear()
+        self.last_click = None
+        if self.against_player is False:  # nezastavi kod, i kdyz by mel
+            self.mimax.minmax()
+        self.AfterMove()
 
     def AiVSP(self):
         """
         switches between playing with a player and playing with an ai
         :return:
         """
+        if self.against_player:
+            self.menubar.entryconfig(4, label='vs Ai')
+        else:
+            self.menubar.entryconfig(4, label='vs Player')
         self.__previous_board = deepcopy(self.chess.board)
         self.against_player = not self.against_player
 
@@ -378,7 +388,7 @@ class ChessGUI:
         self.menubar.add_command(label="New game", command=self.__NewGame)
         self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
-        self.menubar.add_command(label="Ai or Player", command=self.AiVSP)
+        self.menubar.add_command(label="vs Player", command=self.AiVSP)
         self.menubar.add_command(label="Back", command=self.Back)
         self.menubar.add_command(label="Quit", command=self.root.quit)
 
