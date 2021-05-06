@@ -475,7 +475,6 @@ class Chess:
                     delete_moves.append(move)
             for move in delete_moves:
                 possible_moves.remove(move)
-
         return possible_moves
 
     def get_knight_moves(self, file, rank):
@@ -1217,22 +1216,26 @@ class Chess:
             return True
         return False"""
         if self.king_in_check():
-            for row in self.board:
-                for field in row:
+            for j in range(len(self.board)):
+                row = self.board[j]
+                for i in range(len(row)):
+                    field = row[i]
                     if field is not None and self.__is_own_piece(field) and self.get_moves(
-                            self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+                            self.INDEX_TO_LETTER[i], self.INDEX_TO_NUMBER[j]) != []:
                         return False
             return True
         return False
-
 
     def check_stalemate(self):
         """
         checks if game ended in stalemate
         :return: True if game ended with stalemate, else False
         """
-        for row in self.board:
-            for field in row:
-                if field is not None and self.__is_own_piece(field) and self.get_moves(self.INDEX_TO_LETTER[row.index(field)], self.INDEX_TO_NUMBER[self.board.index(row)]) != []:
+        for j in range(len(self.board)):
+            row = self.board[j]
+            for i in range(len(row)):
+                field = row[i]
+                if field is not None and self.__is_own_piece(field) and self.get_moves(
+                        self.INDEX_TO_LETTER[i], self.INDEX_TO_NUMBER[j]) != []:
                     return False
         return True
