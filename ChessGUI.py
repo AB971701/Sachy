@@ -21,6 +21,8 @@ class ChessGUI:
     possible_moves_gui = []
     last_click = None
     against_player = True
+    clicked_square = None
+    last_turn = None
 
     #choices of images depending on the piece in list
     choices = {'Q': 'Images/w_queen.png', 'K': 'Images/w_king.png', 'B': 'Images/w_bishop.png',
@@ -77,6 +79,12 @@ class ChessGUI:
                     self.possible_moves = self.chess.get_moves(
                         self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))],
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
+                    """
+                    clicked square gets a different color 
+                    """
+                    self.ClickedColorBack()
+                    self.clicked_square = self.squares[int((event.x - 50) / ((self.size - 100) / 8)) + 8 * int((event.y - 50) / ((self.size - 100) / 8))]
+                    self.canvas.itemconfig(self.squares[int((event.x - 50) / ((self.size - 100) / 8)) + 8 * int((event.y - 50) / ((self.size - 100) / 8))], fill="DarkOliveGreen3")
                     for move in self.possible_moves:
                         self.possible_moves_gui.append(
                             self.squares[56 + int(self.chess.LETTER_TO_INDEX[move[0]]) - 8 * (int(move[1]) - 1)])
@@ -86,18 +94,37 @@ class ChessGUI:
                         self.__previous_board = deepcopy(self.chess.board)
                         if self.chess.move(self.last_click, self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])):
-                            if self.against_player is False:
-                                self.mimax.minmax()
-                            self.AfterMove()
                             self.ChangeColor('pale goldenrod', 'dark olive green')
                             self.possible_moves_gui.clear()
                             self.possible_moves.clear()
+                            # colors the squares of last turn back
+                            self.ColorTurn(True)
+                            if self.against_player is False:
+                                box = self.mimax.minmax()
+                                self.ClickedColorBack()
+                                if type(box) != int:
+                                    self.last_turn = [self.squares[self.chess.LETTER_TO_INDEX[box[0][0]] + 8 * self.chess.NUMBER_TO_INDEX[int(box[0][1])]],
+                                                      self.squares[self.chess.LETTER_TO_INDEX[box[1][0]] + 8 * self.chess.NUMBER_TO_INDEX[int(box[1][1])]]]  #gets the squares of last turn
+                            else:
+                                self.last_turn = [self.clicked_square, self.squares[
+                                    int((event.x - 50) / ((self.size - 100) / 8)) + 8 * int(
+                                        (event.y - 50) / ((self.size - 100) / 8))]] #gets the squares of last turn
+                            if self.last_turn != None:
+                                self.ColorTurn() #colors the squares of last turn
+                            self.AfterMove()
+
+                            self.clicked_square = None
                             self.last_click = None
                         elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                             self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
                         self.Promotion()
+                        self.last_turn = [self.clicked_square, self.squares[
+                            int((event.x - 50) / ((self.size - 100) / 8)) + 8 * int(
+                                (event.y - 50) / ((self.size - 100) / 8))]]  # gets the squares of last turn
+                        self.ColorTurn(True)
+                        self.clicked_square = None
                 elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                     self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
@@ -223,6 +250,8 @@ class ChessGUI:
         self.ChangeColor('pale goldenrod', 'dark olive green')
         self.possible_moves_gui.clear()
         self.last_click = None
+        self.ColorTurn(True)
+        self.ClickedColorBack()
         self.AfterMove()
         self.mimax.NewChess(self.chess)
 
@@ -241,6 +270,8 @@ class ChessGUI:
             self.ChangeColor('pale goldenrod', 'dark olive green')
             self.possible_moves_gui.clear()
             self.last_click = None
+            self.ColorTurn(True)
+            self.ClickedColorBack()
             self.mimax.NewChess(self.chess)
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
@@ -307,7 +338,7 @@ class ChessGUI:
         self.menubar.entryconfig("New game", state='disabled')
         self.menubar.entryconfig("Save game", state='disabled')
         self.menubar.entryconfig("Load game", state='disabled')
-        if self.against_player:
+        if not self.against_player:
             self.menubar.entryconfig("vs Player", state='disabled')
         else:
             self.menubar.entryconfig("vs Ai", state='disabled')
@@ -336,7 +367,7 @@ class ChessGUI:
         self.menubar.entryconfig("New game", state='normal')
         self.menubar.entryconfig("Save game", state='normal')
         self.menubar.entryconfig("Load game", state='normal')
-        if self.against_player:
+        if not self.against_player:
             self.menubar.entryconfig("vs Player", state='normal')
         else:
             self.menubar.entryconfig("vs Ai", state='normal')
@@ -346,8 +377,17 @@ class ChessGUI:
         self.possible_moves_gui.clear()
         self.possible_moves.clear()
         self.last_click = None
-        if self.against_player is False:  # nezastavi kod, i kdyz by mel
-            self.mimax.minmax()
+        self.ClickedColorBack()
+        if not self.against_player:
+            box = self.mimax.minmax()
+            self.ClickedColorBack()
+            if type(box) != int:
+                self.last_turn = [
+                    self.squares[self.chess.LETTER_TO_INDEX[box[0][0]] + 8 * self.chess.NUMBER_TO_INDEX[int(box[0][1])]],
+                    self.squares[self.chess.LETTER_TO_INDEX[box[1][0]] + 8 * self.chess.NUMBER_TO_INDEX[
+                        int(box[1][1])]]]  # gets the squares of last turn
+        if self.last_turn != None:
+            self.ColorTurn()  # colors the squares of last turn
         self.AfterMove()
 
     def AiVSP(self):
@@ -355,7 +395,7 @@ class ChessGUI:
         switches between playing with a player and playing with an ai
         :return:
         """
-        if self.against_player:
+        if not self.against_player:
             self.menubar.entryconfig(4, label='vs Ai')
         else:
             self.menubar.entryconfig(4, label='vs Player')
@@ -377,7 +417,33 @@ class ChessGUI:
             else:
                 self.chess.board_history.pop()
         self.chess.board = deepcopy(self.__previous_board)
+        if self.last_click != None:
+            self.ChangeColor('pale goldenrod', 'dark olive green')
+            self.possible_moves_gui.clear()
+            self.last_click = None
+            self.ClickedColorBack()
+        self.ColorTurn(True)
         self.AfterMove()
+
+    def ClickedColorBack(self):
+        if self.clicked_square in self.white:
+            self.canvas.itemconfig(self.clicked_square, fill="pale goldenrod")
+        else:
+            self.canvas.itemconfig(self.clicked_square, fill="dark olive green")
+        self.clicked_square = None
+
+    def ColorTurn(self, back=False):
+        if back:
+            if self.last_turn != None:
+                for square in self.last_turn:
+                    if square in self.white:
+                        self.canvas.itemconfig(square, fill="pale goldenrod")
+                    else:
+                        self.canvas.itemconfig(square, fill="dark olive green")
+                self.last_turn = None
+        else:
+            for square in self.last_turn:
+                self.canvas.itemconfig(square, fill="OliveDrab2")
 
     def End(self):
         """
@@ -388,7 +454,7 @@ class ChessGUI:
         self.menubar.add_command(label="New game", command=self.__NewGame)
         self.menubar.add_command(label="Save game", command=lambda: self.__GetFilepathS())
         self.menubar.add_command(label="Load game", command=lambda: self.__GetFilepathL())
-        self.menubar.add_command(label="vs Player", command=self.AiVSP)
+        self.menubar.add_command(label="vs Ai", command=self.AiVSP)
         self.menubar.add_command(label="Back", command=self.Back)
         self.menubar.add_command(label="Quit", command=self.root.quit)
 

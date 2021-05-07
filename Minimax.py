@@ -73,13 +73,19 @@ class Minimax:
                 try:
                     if white_plays:
                         self.chess.move(max(values, key=lambda x: x[2])[0], max(values, key=lambda x: x[2])[1])
+                        return max(values, key=lambda x: x[2])[0], max(values, key=lambda x: x[2])[1] # for the coloring of the squares
                     else:
                         self.chess.move(min(values, key=lambda x: x[2])[0], min(values, key=lambda x: x[2])[1])
+                        return min(values, key=lambda x: x[2])[0], min(values, key=lambda x: x[2])[1] # for the coloring of the squares
                 except PromotePawnException:
                     """
                     Queen is the best in most situations, so automaticaly promote to queen
                     """
                     self.chess.promote_pawn('q')
+                    if white_plays:
+                        return max(values, key=lambda x: x[2])[0], max(values, key=lambda x: x[2])[1] # for the coloring of the squares
+                    else:
+                        return min(values, key=lambda x: x[2])[0], min(values, key=lambda x: x[2])[1] # for the coloring of the squares
             #print(values)
             if white_plays:
                 """
