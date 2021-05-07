@@ -99,7 +99,7 @@ class ChessGUI:
                             self.possible_moves.clear()
                             # colors the squares of last turn back
                             self.ColorTurn(True)
-                            if self.against_player is False:
+                            if not self.against_player:
                                 box = self.mimax.minmax()
                                 self.ClickedColorBack()
                                 if type(box) != int:
@@ -120,11 +120,11 @@ class ChessGUI:
                                 self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
                     except PromotePawnException:
                         self.Promotion()
+                        self.ColorTurn(True)
                         self.last_turn = [self.clicked_square, self.squares[
                             int((event.x - 50) / ((self.size - 100) / 8)) + 8 * int(
                                 (event.y - 50) / ((self.size - 100) / 8))]]  # gets the squares of last turn
-                        self.ColorTurn(True)
-                        self.clicked_square = None
+                        self.ClickedColorBack()
                 elif piece != None and ((self.chess.white_plays and piece.isupper()) or (not self.chess.white_plays and piece.islower())):
                     self.last_click = self.chess.INDEX_TO_LETTER[int((event.x - 50) / ((self.size - 100) / 8))] + str(
                         self.chess.INDEX_TO_NUMBER[int((event.y - 50) / ((self.size - 100) / 8))])
@@ -250,8 +250,8 @@ class ChessGUI:
         self.ChangeColor('pale goldenrod', 'dark olive green')
         self.possible_moves_gui.clear()
         self.last_click = None
-        self.ColorTurn(True)
         self.ClickedColorBack()
+        self.ColorTurn(True)
         self.AfterMove()
         self.mimax.NewChess(self.chess)
 
@@ -270,8 +270,8 @@ class ChessGUI:
             self.ChangeColor('pale goldenrod', 'dark olive green')
             self.possible_moves_gui.clear()
             self.last_click = None
-            self.ColorTurn(True)
             self.ClickedColorBack()
+            self.ColorTurn(True)
             self.mimax.NewChess(self.chess)
         except:
             tk.Label(self.main, text=("No such file or directory: " + self.text.get())).grid(column=1, row=0)
