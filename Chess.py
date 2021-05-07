@@ -941,7 +941,10 @@ class Chess:
         """
         board = self.board if board is None else board
         king = 'K' if self.white_plays else 'k'
-        row = [row for row in board if king in row][0]
+        try:
+            row = [row for row in board if king in row][0]
+        except IndexError:
+            return True
         rank = self.INDEX_TO_NUMBER[board.index(row)]
         file_num = row.index(king)
 
@@ -1131,7 +1134,7 @@ class Chess:
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
         # nahoru
-        if 0 <= (rank + 1) <= 7:
+        if 0 <= (rank + 1) <= 8:
             piece = self.__find_piece_on_coords(self.INDEX_TO_LETTER[file_num], rank + 1)
             if piece is not None and not self.__is_own_piece(piece) and piece.lower() == 'k':
                 return True
